@@ -154,6 +154,40 @@ while True:
             print(u'Текст сообщения: ' + str(event.obj.text))
 
             if event.from_chat:
+                try:
+                    if event.obj.action.get('type') == 'chat_invite_user':
+                        session_api.messages.send(chat_id=event.chat_id,
+                                                  message='Привет, я kino-bot. &#9996;\n&#10071; Для того, чтобы '
+                                                          'начать - необходимо назначить меня администратором.\n'
+                                                          '&#128253;\nЯ помогу вам определится с выбором фильма.&#9762;\n'
+                                                          'Для этого напишите &#128172; [ !фильм ] &#128172; в чат '
+                                                          'и от тех, кто поставит &#128172; [ + ] &#128172; '
+                                                          'я жду 3 фильма. После этого, командой &#128172; [ !ролл ] я выберу '
+                                                          'случайный фильм &#11088; , а оставшиеся я скину '
+                                                          'вам в лс, для дальнейшего использования.\n&#128253;\n'
+                                                          '&#128161; Весь список доступных команд вы можете узнать с помощью &#128172; [ !команды ] &#128172;',
+                                                random_id=get_random_id())
+                        break
+                except:
+                    print('hello')
+
+
+                if event.obj.text.lower() == '!команды':
+                    session_api.messages.send(chat_id=event.chat_id,
+                                              message='Список команд:\n&#128172;&#128172;&#128172;\n'
+                                                      '_______________________________________________________________\n'
+                                                      '&#128172; [ !фильм ] - запускает сбор фильмов\n'
+                                                      '&#128172; [ + ] - подтверждает вашу готовность к выбору случайного фильма.'
+                                                      '&#10071; Работает только после написания команды &#128172; [ !фильм ] &#128172;&#10071;\n'
+                                                      '&#128172; [ !ролл ] - запуск выбора случайного фильма. &#10071; Работает только после '
+                                                      'написания команды &#128172; [ !фильм ] &#128172; и при условии, что все, кто поставили '
+                                                      '&#128172; [ + ] &#128172; скинули боту по 3 фильма &#10071;\n'
+                                                      '&#128172; [ !команды ] - скидывает список доступных команд в чат.\n'
+                                                      '&#128172; [ привет ] - hello\n'
+                                                      '_______________________________________________________________',
+                                              random_id=get_random_id())
+                    break
+
                 for i in range(len(rollMoive)):
                     if rollMoive[i].chat_id == event.chat_id:
                         only = rollMoive[i]
@@ -170,12 +204,15 @@ while True:
                     if again_moviesroll:
                         session_api.messages.send(chat_id=event.chat_id, message='Сбор фильмов уже начался!!',
                                                   random_id=get_random_id())
+                        break
                     else:
                         rollMoive.append(ChatRoll(event))
                         session_api.messages.send(chat_id=event.chat_id, message='Все, кто готов смотреть + в чат', random_id=get_random_id())
+                        break
 
                 elif event.obj.text.lower() == 'привет':
                     session_api.messages.send(chat_id=event.chat_id, message='Hello', random_id=get_random_id())
+                    break
 
                 elif event.obj.text.lower() == '+':
                     if again_plus:
@@ -187,6 +224,7 @@ while True:
 
                         session_api.messages.send(chat_id=event.chat_id, message=message,
                                                   random_id=get_random_id())
+                        break
                     else:
                         if again_moviesroll:
 
@@ -199,11 +237,13 @@ while True:
                                                         message='Скидывай назвние фильма сюда',
                                                         random_id=get_random_id())
                                     only.newMan(event.chat_id, event.obj.from_id)
+                                    break
                                 else:
                                     session_api.messages.send(peer_id=event.obj.from_id,
                                                               message='Принял от тебя ' + str(len(movies)) + ' фильма',
                                                               random_id=get_random_id())
                                     only.newManm(event.chat_id, event.obj.from_id,movies)
+                                    break
 
                                 #only.newMan(event.chat_id, event.obj.from_id)
                                 #ChekAlreadyUse(event.obj.from_id)
@@ -219,6 +259,7 @@ while True:
 
                                 session_api.messages.send(chat_id=event.chat_id, message= message ,
                                                     random_id=get_random_id())
+                                break
 
                 elif event.obj.text == '!ролл':
                     #t = threading.Thread(target=Typing, args=(event.chat_id,))
@@ -235,11 +276,13 @@ while True:
                                                   random_id=get_random_id())
                             only.SendFilmsToAll()
                             rollMoive.remove(only)
+                            break
                     else:
                         session_api.messages.send(chat_id=event.chat_id, message='Для начала необходимо прописать !фильм, '
                                                                                  'для того, чтобы запустить сбор фильмов.'
                                                                             ,
                                                   random_id=get_random_id())
+                        break
                     #t.join()
 
             if event.from_user:
@@ -275,6 +318,7 @@ while True:
                             session_api.messages.send(peer_id=event.obj.from_id,
                                                       message=message,
                                                       random_id=get_random_id(), keyboard=keybord)
+                            break
                             #t.join()
                         elif event.obj.text == '+':
                             only.countFindFilm = 0
@@ -288,6 +332,7 @@ while True:
                             session_api.messages.send(peer_id=event.obj.from_id,
                                                       message=message,
                                                       random_id=get_random_id())
+                            break
 
 
                         else:
@@ -300,6 +345,7 @@ while True:
                             session_api.messages.send(peer_id=event.obj.from_id,
                                                       message=message,
                                                       random_id=get_random_id(), keyboard=keybord)
+                            break
                             #t.join()
 
                     else:
@@ -307,6 +353,7 @@ while True:
                         session_api.messages.send(peer_id=event.obj.from_id,
                                                 message=message,
                                                 random_id=get_random_id())
+                        break
 
 
                 else:
@@ -318,6 +365,7 @@ while True:
                         session_api.messages.send(peer_id=event.obj.from_id,
                                               message=message,
                                               random_id=get_random_id())
+                        break
                     #print('не успео')
                     #boolTuping = False
                     #t.join()
