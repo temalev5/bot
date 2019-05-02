@@ -1,2 +1,2 @@
 vk-api
-kinopoisk.ru
+kinopoiskpy
