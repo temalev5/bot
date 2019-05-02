@@ -359,6 +359,13 @@ while True:
                 else:
                     #t = threading.Thread(target=Typing, args=(event.obj.from_id,))
                     #t.start()
+                    if event.obj.text.lower() == 'начать':
+                        session_api.messages.send(peer_id=event.obj.from_id,
+                                                  message='Привет, я kino-bot. &#9996;\n&#128253; Скинь мне название фильма, и ' 
+                                                          'я напишу тебе информацию о нем. &#128253;',
+                                                  random_id=get_random_id())
+                        break
+
                     if event.obj.text != '+' and event.obj.text != '-':
                         message = NameToID(event.obj.text, 0)
 
