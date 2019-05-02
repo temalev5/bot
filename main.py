@@ -1,22 +1,56 @@
 # -*- coding: utf-8 -*-
+import threading
+import time
 import vk_api
+import random
 from vk_api.bot_longpoll import VkBotLongPoll, VkBotEventType
 from vk_api.keyboard import VkKeyboard,VkKeyboardColor
 from datetime import datetime
 from vk_api.utils import get_random_id
 from sm import NameToID
+from sm import getName
+import os
 
 #login, password = "login", "password"
 #vk_session = vk_api.VkApi(login, password)
 #vk_session.auth()
 
-token = "15886843296d1809121b5d9cdf1dec2e8ac75688f33c01f51d3b838f17707f7cf1a1e08d5c3225191b8b5"
+token = os.environ.get('BOT_TOKEN')
 vk_session = vk_api.VkApi(token=token)
 
 session_api = vk_session.get_api()
 longpoll = VkBotLongPoll(vk_session, '181453927')
 
-#def MovieMaker()
+
+def ChekAlreadyUse(man_id, chat_id):
+    try:
+        history = session_api.messages.getHistory(offset = 0, count = 25, user_id = man_id  )
+        for i in range(25):
+            if history.get('items')[i].get('text')[0] == '$':
+                term = history.get('items')[i].get('text').find('\n')
+                message_chat_id = int(history.get('items')[i].get('text')[1:term])
+                if chat_id == message_chat_id:
+                    movies = history.get('items')[i].get('text').split('\n')
+                    movies.pop(0)
+                    break
+        if len(movies) > 3:
+            movies = movies[0:3]
+        return movies
+    except:
+        movies = []
+        return movies
+
+    print(history)
+
+#def Typing(user_id):
+    #boolTuping = True
+    #while boolTuping:
+        #print('успел')
+        #session_api.messages.setActivity(peer_id=user_id,type = 'typing')
+        #time.sleep(5)
+
+
+
 
 class Man:
 
@@ -25,97 +59,265 @@ class Man:
         self.man_id = man_id
         self.movies = []
         self.mc = 0
+        self.searchMovie = '0'
+        self.countFindFilm = 0
+        self.targetMovie = '0'
 
-    def SetMovies(self,movi):
-        self.movies.append(movi)
-        print(movi)
+    def getName(self):
+        userinfo = session_api.users.get(user_ids=self.man_id)
+        username = userinfo[0].get('first_name')
+        return username
 
+    def SearchMovies(self,movi):
+        self.SearchMovie = getName(movi, self.countFindFilm)
+        self.targetMovie = self.SearchMovie
 
+    def TargetMovie(self,movi):
+        self.targetMovie = getName(movi, self.countFindFilm)
+
+    def SetMovies(self):
+        self.movies.append(self.targetMovie)
+
+    def RemovieMovie(self):
+        self.movies.pop()
+        self.countFindFilm += 1
 
 
 class ChatRoll:
-    #countMan=0
 
     def __init__(self, event):
         self.chat_id = event.chat_id
-        self.z = 0
         self.man = []
 
     def newMan(self, chat_id, man_id):
         self.man.append(Man(chat_id, man_id))
-        self.z=+1
-        #ChatRoll.countMan=+1
+
+    def newManm(self,chat_id,man_id, movies):
+        self.man.append(Man(chat_id, man_id))
+        self.man[len(man)-1].movies = movies
 
     def getMan(self):
         return self.man
 
-    def getCountMan(self):
-        return self.z
+    def SendFilmsToAll(self):
+        for i in range(len(self.man)):
+            message = '$' + str(self.chat_id) + '\n'
+            for j in range(len(self.man[i].movies)):
+                message += man[i].movies[j] + '\n'
+            session_api.messages.send(peer_id=man[i].man_id,
+                                      message=message,
+                                      random_id=get_random_id())
+
+    def roll(self):
+
+        if len(self.man) == 0:
+            return '0','0'
+
+        filmlist = 'Список фильмов\n_______________________________________________________________\n'
+        retlistfiml = 'СЛУЧАЙНЫЙ ФИЛЬМ:\n&#128293;&#128293;&#128293;&#128293;&#128293;&#128293;&#128293;&#128293;' \
+                      '&#128293;&#128293;&#128293;&#128293;&#128293;&#128293;&#128293;&#128293;&#128293;&#128293;' \
+                      '&#128293;&#128293;\n '
+        listfilm = []
+        for i in range(len(self.man)):
+            filmlist += '***********************\n* ' + man[i].getName() + ' *\n'
+            if len(self.man[i].movies) < 3:
+                return '0','0'
+            elif len(self.man[i].movies) == 3:
+                for j in range(len(self.man[i].movies)):
+                    filmlist += man[i].movies[j] + '\n'
+                    listfilm.append(man[i].movies[j])
+        filmlist += '***********************\n_______________________________________________________________\n'
+        rnd = random.randint(0, len(listfilm)-1)
+        removiemovie = listfilm[rnd]
+        retlistfiml += NameToID(listfilm[rnd], 0)
+
+        for i in range(len(self.man)):
+            try:
+                man[i].movies.remove(removiemovie)
+            except:
+                print()
 
 
+        return filmlist, retlistfiml
+
+
+boolTuping = False
 k=0
 rollMoive = []
 
 while True:
-    again = False
     for event in longpoll.listen():
         if event.type == VkBotEventType.MESSAGE_NEW:
+            again_moviesroll = False
+            again_plus = False
             print(u'Сообщение пришло в: ' + str(datetime.strftime(datetime.now(), "%H:%M:%S")))
             print(u'Текст сообщения: ' + str(event.obj.text))
+
             if event.from_chat:
-                for i in range(k):
+                for i in range(len(rollMoive)):
                     if rollMoive[i].chat_id == event.chat_id:
-                        again = True
+                        only = rollMoive[i]
+                        again_moviesroll = True
+                try:
+                    man = only.getMan()
+                    for j in range(len(only.man)):
+                        if man[j].man_id == event.obj.from_id:
+                            again_plus = True
+                except:
+                    print('hello')
+
+                if event.obj.text.lower() == '!фильм':
+                    if again_moviesroll:
                         session_api.messages.send(chat_id=event.chat_id, message='Сбор фильмов уже начался!!',
                                                   random_id=get_random_id())
-                if event.obj.text.lower() == '!фильм' and (not again):
-                    rollMoive.append(ChatRoll(event))
-                    k+=1
-                    session_api.messages.send(chat_id=event.chat_id, message='Все, кто готов смотреть + в чат', random_id=get_random_id())
-                if event.obj.text.lower() == 'привет':
+                    else:
+                        rollMoive.append(ChatRoll(event))
+                        session_api.messages.send(chat_id=event.chat_id, message='Все, кто готов смотреть + в чат', random_id=get_random_id())
+
+                elif event.obj.text.lower() == 'привет':
                     session_api.messages.send(chat_id=event.chat_id, message='Hello', random_id=get_random_id())
 
-                if event.obj.text.lower() == '+':
-                    for i in range(k):
-                        if rollMoive[i].chat_id == event.chat_id:
-                            rollMoive[i].newMan(event.chat_id, event.obj.from_id)
-                    try:
-                        session_api.messages.send(peer_id = event.obj.from_id,
-                                              message='Скидывай назвние фильма сюда, либо его id на кинопоиске',
-                                              random_id=get_random_id())
-                    except:
-                        userinfo = session_api.users.get(user_ids = event.obj.from_id)
+                elif event.obj.text.lower() == '+':
+                    if again_plus:
+                        userinfo = session_api.users.get(user_ids=event.obj.from_id)
                         username = userinfo[0].get('first_name')
-                        #print (b)
 
-                        message = '@id' + str(event.obj.from_id) + ' (' + username + '), разреши мне писать тебе сообщения\nДля этого перейди в мою группу, кликнув на меня.\nЛибо просто напиши мне первый'
+                        message = '@id' + str(event.obj.from_id) + ' (' + username + '), уже отписал тебе в лс'
 
 
-                            #'Не могу отправить сообщение, @id' + str(event.obj.from_id) + ' (' + username + '), ' \
-                             #       'напиши мне первый, а потом еще раз поставь + в чат.\n' \
-                             #       'Либо разреши мне писать тебе сообщения&#128521'
+                        session_api.messages.send(chat_id=event.chat_id, message=message,
+                                                  random_id=get_random_id())
+                    else:
+                        if again_moviesroll:
 
-                        session_api.messages.send(chat_id=event.chat_id, message= message ,
-                                                 random_id=get_random_id())
+                            try:
+                                movies = []
+                                movies = ChekAlreadyUse(event.obj.from_id, event.chat_id)
+                                if len(movies) == 0:
+
+                                    session_api.messages.send(peer_id = event.obj.from_id,
+                                                        message='Скидывай назвние фильма сюда',
+                                                        random_id=get_random_id())
+                                    only.newMan(event.chat_id, event.obj.from_id)
+                                else:
+                                    session_api.messages.send(peer_id=event.obj.from_id,
+                                                              message='Принял от тебя ' + str(len(movies)) + ' фильма',
+                                                              random_id=get_random_id())
+                                    only.newManm(event.chat_id, event.obj.from_id,movies)
+
+                                #only.newMan(event.chat_id, event.obj.from_id)
+                                #ChekAlreadyUse(event.obj.from_id)
+                            except:
+
+                                userinfo = session_api.users.get(user_ids = event.obj.from_id)
+                                username = userinfo[0].get('first_name')
+
+                                message = '@id' + str(event.obj.from_id) + \
+                                        ' (' + username + '), разреши мне писать тебе сообщения\n' \
+                                                            'Для этого перейди в мою группу, кликнув на меня.\n' \
+                                                            'Либо просто напиши мне первый'
+
+                                session_api.messages.send(chat_id=event.chat_id, message= message ,
+                                                    random_id=get_random_id())
+
+                elif event.obj.text == '!ролл':
+                    #t = threading.Thread(target=Typing, args=(event.chat_id,))
+                    #t.start()
+                    if again_moviesroll:
+                        filmlist,listfilm = only.roll()
+                        if filmlist != '0' and listfilm !='0':
+                            session_api.messages.send(chat_id=event.chat_id, message=filmlist,
+                                                  random_id=get_random_id())
+
+                        #listfilm += NameToID(behmovie, 0)
+
+                            session_api.messages.send(chat_id=event.chat_id, message=listfilm,
+                                                  random_id=get_random_id())
+                            only.SendFilmsToAll()
+                            rollMoive.remove(only)
+                    else:
+                        session_api.messages.send(chat_id=event.chat_id, message='Для начала необходимо прописать !фильм, '
+                                                                                 'для того, чтобы запустить сбор фильмов.'
+                                                                            ,
+                                                  random_id=get_random_id())
+                    #t.join()
+
             if event.from_user:
-                if event.obj.text != '+' or event.obj.text != '-':
-                    man = []
-                    for i in range(k):
-                        man = rollMoive[i].getMan()
-                        for j in range(rollMoive[i].getCountMan()):
-                            if man[j].man_id == event.obj.from_id:
-                                keybord = VkKeyboard(one_time=True)
-                                keybord.add_button('+', color= VkKeyboardColor.DEFAULT)
-                                session_api.messages.send(peer_id=event.obj.from_id,
-                                                      message=NameToID(event.obj.text),
-                                                      random_id=get_random_id(),keyboard=keybord)
+                man = []
+                only = None
+                from_group = False
 
-                            #man[j].SetMovies(event.obj.text)
-                    keybord = VkKeyboard(one_time=True)
-                    keybord.add_button('+', color=VkKeyboardColor.POSITIVE)
-                    keybord.add_button('-', color=VkKeyboardColor.NEGATIVE)
-                    keybord = keybord.get_keyboard()
+                for i in range(len(rollMoive)):
+                    man = rollMoive[i].getMan()
+                    for j in range(len(rollMoive[i].man)):
+                        if man[j].man_id == event.obj.from_id:
+                            only = man[j]
+                            from_group = True
 
-                    session_api.messages.send(peer_id=event.obj.from_id,
-                                                      message=NameToID(event.obj.text),
-                                                      random_id=get_random_id(),keyboard = keybord)
+                keybord = VkKeyboard(one_time=True)
+                keybord.add_button('+', color=VkKeyboardColor.POSITIVE)
+                keybord.add_button('-', color=VkKeyboardColor.NEGATIVE)
+                keybord = keybord.get_keyboard()
+
+                if from_group:
+
+                    if len(only.movies) < 3:
+
+                        if event.obj.text == '-':
+                            #t = threading.Thread(target=Typing, args=(event.obj.from_id,))
+                            #t.start()
+                            behmovie = only.SearchMovie
+                            only.countFindFilm += 1
+                            message = NameToID(behmovie, only.countFindFilm)
+                            message += 'Это он?&#129300; Отпиши + или -'
+                            if message != '0':
+                                only.TargetMovie(behmovie)
+                            session_api.messages.send(peer_id=event.obj.from_id,
+                                                      message=message,
+                                                      random_id=get_random_id(), keyboard=keybord)
+                            #t.join()
+                        elif event.obj.text == '+':
+                            only.countFindFilm = 0
+                            only.SetMovies()
+
+                            if len(only.movies) < 3:
+                                message = 'Записал этот фильм, жду следующего'
+                            else:
+                                message = 'Приял от тебя все 3 фильма'
+
+                            session_api.messages.send(peer_id=event.obj.from_id,
+                                                      message=message,
+                                                      random_id=get_random_id())
+
+
+                        else:
+                            #t = threading.Thread(target=Typing, args=(event.obj.from_id,))
+                            #t.start()
+                            message = NameToID(event.obj.text, only.countFindFilm)
+                            message += 'Это он?&#129300; Отпиши + или -'
+                            if message != '0':
+                                only.SearchMovies(event.obj.text)
+                            session_api.messages.send(peer_id=event.obj.from_id,
+                                                      message=message,
+                                                      random_id=get_random_id(), keyboard=keybord)
+                            #t.join()
+
+                    else:
+                        message = 'Твои 3 фильма приняты, ожидай ролла!'
+                        session_api.messages.send(peer_id=event.obj.from_id,
+                                                message=message,
+                                                random_id=get_random_id())
+
+
+                else:
+                    #t = threading.Thread(target=Typing, args=(event.obj.from_id,))
+                    #t.start()
+                    if event.obj.text != '+' and event.obj.text != '-':
+                        message = NameToID(event.obj.text, 0)
+
+                        session_api.messages.send(peer_id=event.obj.from_id,
+                                              message=message,
+                                              random_id=get_random_id())
+                    #print('не успео')
+                    #boolTuping = False
+                    #t.join()
