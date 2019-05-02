@@ -1,2 +1,2 @@
 vk-api
-git+https://github.com/temalev5/kinopoiskpyutf-8.git --upgrade
+git+https://github.com/temalev5/kinopoiskpyutf-8.git
