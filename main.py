@@ -24,7 +24,7 @@ longpoll = VkBotLongPoll(vk_session, '181453927')
 
 def ChekAlreadyUse(man_id, chat_id):
     try:
-        history = session_api.messages.getHistory(offset = 0, count = 25, user_id = man_id  )
+        history = session_api.messages.getHistory(offset = 0, count = 25, user_id = man_id)
         for i in range(25):
             if history.get('items')[i].get('text')[0] == '$':
                 term = history.get('items')[i].get('text').find('\n')
@@ -81,6 +81,9 @@ class Man:
     def RemovieMovie(self):
         self.movies.pop()
         self.countFindFilm += 1
+
+    def Removie(self,pos):
+        return self.movies.pop(pos-1)
 
 
 class ChatRoll:
@@ -211,7 +214,25 @@ while True:
                         break
 
                 elif event.obj.text.lower() == 'привет':
-                    session_api.messages.send(chat_id=event.chat_id, message='Hello', random_id=get_random_id())
+
+                    #keybord1 = VkKeyboard()
+                    #keybord = keybord.get_keyboard()
+
+                    #keybord = {
+                    #    "buttons":[],
+                    #    "one_time":True
+                    #}
+                    #keybord = keybord.get_keyboard()
+                    #keybord = keybord.get_empty_keyboard()
+
+                    #session_api.messages.send(peer_id=event.obj.from_id,
+                    #                          message='Скидывай назвние фильма сюда',
+                    #                          random_id=get_random_id(), keybord=keybord1.get_empty_keyboard())
+
+
+
+
+                    #session_api.messages.send(chat_id=event.chat_id, message='Hello', random_id=get_random_id())
                     break
 
                 elif event.obj.text.lower() == '+':
@@ -233,16 +254,24 @@ while True:
                                 movies = ChekAlreadyUse(event.obj.from_id, event.chat_id)
                                 if len(movies) == 0:
 
+                                    keybord = VkKeyboard(one_time=True)
+                                    #keybord.add_button('Ебу собак', color=VkKeyboardColor.PRIMARY)
+                                    #keybord.add_line()
+                                    #keybord.add_button('Не ебу собак', color=VkKeyboardColor.DEFAULT)
+                                    #keybord.add_line()
+                                    #keybord.add_button('Ебу детей', color=VkKeyboardColor.DEFAULT)
+                                    keybord = keybord.get_keyboard()
+
                                     session_api.messages.send(peer_id = event.obj.from_id,
                                                         message='Скидывай назвние фильма сюда',
-                                                        random_id=get_random_id())
+                                                        random_id=get_random_id(), keybord = keybord)
                                     only.newMan(event.chat_id, event.obj.from_id)
                                     break
                                 else:
                                     session_api.messages.send(peer_id=event.obj.from_id,
                                                               message='Принял от тебя ' + str(len(movies)) + ' фильма',
                                                               random_id=get_random_id())
-                                    only.newManm(event.chat_id, event.obj.from_id,movies)
+                                    only.newManm(event.chat_id, event.obj.from_id, movies)
                                     break
 
                                 #only.newMan(event.chat_id, event.obj.from_id)
@@ -297,12 +326,17 @@ while True:
                             only = man[j]
                             from_group = True
 
-                keybord = VkKeyboard(one_time=True)
-                keybord.add_button('+', color=VkKeyboardColor.POSITIVE)
-                keybord.add_button('-', color=VkKeyboardColor.NEGATIVE)
-                keybord = keybord.get_keyboard()
+                #keybord = None
 
                 if from_group:
+
+                    keybord = VkKeyboard(one_time=True)
+                    keybord.add_button('+', color=VkKeyboardColor.POSITIVE)
+                    #keybord.add_line()
+                    keybord.add_button('-', color=VkKeyboardColor.NEGATIVE)
+                    #keybord.add_line()
+                    #keybord.add_button('Изменить третий', color=VkKeyboardColor.DEFAULT)
+                    keybord = keybord.get_keyboard()
 
                     if len(only.movies) < 3:
 
@@ -324,10 +358,19 @@ while True:
                             only.countFindFilm = 0
                             only.SetMovies()
 
+                            #keybord = VkKeyboard(one_time=True)
+                            #keybord.add_button('Изменить первый', color=VkKeyboardColor.PRIMARY)
+                            #keybord.add_line()
+                            #keybord.add_button('Изменить второй', color=VkKeyboardColor.DEFAULT)
+                            #keybord.add_line()
+                            #keybord.add_button('Изменить третий', color=VkKeyboardColor.DEFAULT)
+                            #keybord = keybord.get_keyboard()
+
                             if len(only.movies) < 3:
                                 message = 'Записал этот фильм, жду следующего'
                             else:
-                                message = 'Приял от тебя все 3 фильма'
+                                message = '&#9745; Принял от тебя все 3 фильма. &#9745;\n&#128253;&#128253;&#128253;\n' \
+                                          '&#10071; Тебе доступна команда &#128172; [ !заменить <номер фильма> ] &#128172;'
 
                             session_api.messages.send(peer_id=event.obj.from_id,
                                                       message=message,
@@ -349,11 +392,28 @@ while True:
                             #t.join()
 
                     else:
-                        message = 'Твои 3 фильма приняты, ожидай ролла!'
-                        session_api.messages.send(peer_id=event.obj.from_id,
+                        if event.obj.text.lower()[0:9] == '!заменить':
+                            try:
+                                num = int(event.obj.text[10])
+                            except:
+                                break
+                            if num > 3 or num < 1 or len(only.movies)<num:
+                                break
+                            else:
+                                removie = only.Removie(num)
+                                message = 'Фильм &#128253; ' + removie + ' &#128253; был удален\n' \
+                                                                         'Жду от тебя фильма на замену.'
+                                session_api.messages.send(peer_id=event.obj.from_id,
+                                                          message=message,
+                                                          random_id=get_random_id())
+
+                            #text = event.obj.text[12:len(event.obj.text)]
+                        else:
+                            message = 'Твои 3 фильма приняты, ожидай ролла!'
+                            session_api.messages.send(peer_id=event.obj.from_id,
                                                 message=message,
                                                 random_id=get_random_id())
-                        break
+                            break
 
 
                 else:

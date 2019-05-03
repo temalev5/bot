@@ -16,7 +16,7 @@ def NameToID(name, pos):
         nametoid = '0'
     else:
         movie_list[pos].get_content('main_page')
-        movie_list[pos].get_content('cast')
+        #movie_list[pos].get_content('cast')
         try:
             movie_list[pos].genres.remove('... слова')
         except:
