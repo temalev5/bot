@@ -18,7 +18,6 @@ from lordfilm import SearchURLMovies
 #vk_session.auth()
 
 token = os.environ.get('BOT_TOKEN')
-#token = "767809b3a110bf29b28438d837480302789fa7a87232ed8e8a2cd2925d18dedf753919bd340fb62d82f0d"
 vk_session = vk_api.VkApi(token=token)
 
 session_api = vk_session.get_api()
