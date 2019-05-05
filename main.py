@@ -138,7 +138,7 @@ class ChatRoll:
 
         url = SearchURLMovies(removiemovie)
 
-        retlistfiml += '\n' + url
+        retlistfiml += '\n&#9889;' + url + ' &#9889;'
 
         for i in range(len(self.man)):
             try:
@@ -309,6 +309,8 @@ while True:
 
                             session_api.messages.send(chat_id=event.chat_id, message=listfilm,
                                                   random_id=get_random_id())
+
+
                             only.SendFilmsToAll()
                             rollMoive.remove(only)
                             break
