@@ -273,9 +273,16 @@ while True:
                                                         random_id=get_random_id(), keybord = keybord)
                                     only.newMan(event.chat_id, event.obj.from_id)
                                     break
+                                elif len(movies) < 3:
+                                    session_api.messages.send(peer_id=event.obj.from_id,
+                                                              message='Принял от тебя ' + str(len(movies)) + ' фильма, жду еще ' + str((3 - len(movies))),
+                                                              random_id=get_random_id())
+                                    only.newManm(event.chat_id, event.obj.from_id, movies)
+                                    break
                                 else:
                                     session_api.messages.send(peer_id=event.obj.from_id,
-                                                              message='Принял от тебя ' + str(len(movies)) + ' фильма',
+                                                              message='&#9745; Принял от тебя все 3 фильма. &#9745;\n&#128253;&#128253;&#128253;\n' \
+                                                                        '&#10071; Тебе доступна команда &#128172; [ !заменить <номер фильма> ] &#128172;',
                                                               random_id=get_random_id())
                                     only.newManm(event.chat_id, event.obj.from_id, movies)
                                     break
@@ -354,9 +361,19 @@ while True:
                             behmovie = only.SearchMovie
                             only.countFindFilm += 1
                             message = NameToID(behmovie, only.countFindFilm)
-                            message += 'Это он?&#129300; Отпиши + или -'
                             if message != '0':
                                 only.TargetMovie(behmovie)
+                            else:
+                                only.countFindFilm = 0
+                                session_api.messages.send(peer_id=event.obj.from_id,
+                                                          message='&#9888; &#9888; &#9888;\n&#10071;'
+                                                                  ' Не смог найти фильм по твоему запросу &#10071;\n'
+                                                                  '&#129300; Наверняка у него другое название, попробуй еще &#129300;\n'
+                                                                  '&#9888; &#9888; &#9888;\n',
+                                                          random_id=get_random_id())
+                                break
+                            message += 'Это он?&#129300; Отпиши + или -'
+
                             session_api.messages.send(peer_id=event.obj.from_id,
                                                       message=message,
                                                       random_id=get_random_id(), keyboard=keybord)
@@ -389,10 +406,19 @@ while True:
                         else:
                             #t = threading.Thread(target=Typing, args=(event.obj.from_id,))
                             #t.start()
-                            message = NameToID(event.obj.text, only.countFindFilm)
-                            message += 'Это он?&#129300; Отпиши + или -'
+                            message = NameToID(event.obj.text, 0)
                             if message != '0':
                                 only.SearchMovies(event.obj.text)
+                            else:
+                                session_api.messages.send(peer_id=event.obj.from_id,
+                                                          message='&#9888; &#9888; &#9888;\n&#10071;'
+                                                                  ' Не смог найти фильм по твоему запросу &#10071;\n'
+                                                                  '&#129300; Наверняка у него другое название, попробуй еще &#129300;\n'
+                                                                  '&#9888; &#9888; &#9888;\n',
+                                                          random_id=get_random_id())
+                                break
+                            message += 'Это он?&#129300; Отпиши + или -'
+
                             session_api.messages.send(peer_id=event.obj.from_id,
                                                       message=message,
                                                       random_id=get_random_id(), keyboard=keybord)
@@ -436,6 +462,15 @@ while True:
 
                     if event.obj.text != '+' and event.obj.text != '-':
                         message = NameToID(event.obj.text, 0)
+                        if message == '0':
+                            session_api.messages.send(peer_id=event.obj.from_id,
+                                                      message='&#9888; &#9888; &#9888;\n&#10071;'
+                                                              ' Не смог найти фильм по твоему запросу &#10071;\n'
+                                                              '&#129300; Наверняка у него другое название, попробуй еще &#129300;\n'
+                                                              '&#9888; &#9888; &#9888;\n',
+                                                      random_id=get_random_id())
+                            break
+                        message += '\n&#9889;' + SearchURLMovies(event.obj.text) + ' &#9889;'
 
                         session_api.messages.send(peer_id=event.obj.from_id,
                                               message=message,
