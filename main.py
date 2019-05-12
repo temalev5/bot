@@ -192,7 +192,7 @@ while True:
                                                       'написания команды &#128172; [ !фильм ] &#128172; и при условии, что все, кто поставили '
                                                       '&#128172; [ + ] &#128172; скинули боту по 3 фильма &#10071;\n'
                                                       '&#128172; [ !команды ] - скидывает список доступных команд в чат.\n'
-                                                      '&#128172; [ привет ] - hello\n'
+                                                      '&#128172; [ !стоп ] - останавливает сбор фильмов\n'
                                                       '_______________________________________________________________',
                                               random_id=get_random_id())
                     break
@@ -319,7 +319,7 @@ while True:
                                                     random_id=get_random_id())
                                 break
 
-                elif event.obj.text == '!ролл':
+                elif event.obj.text.lower() == '!ролл':
                     #t = threading.Thread(target=Typing, args=(event.chat_id,))
                     #t.start()
                     if again_moviesroll:
@@ -343,6 +343,13 @@ while True:
                                                                             ,
                                                   random_id=get_random_id())
                         break
+                elif event.obj.text.lower() == '!стоп':
+                    if again_moviesroll:
+                        only.SendFilmsToAll()
+                        rollMoive.remove(only)
+                        session_api.messages.send(chat_id=event.chat_id,
+                                                  message='Сбор фильмов остановлен',
+                                                  random_id=get_random_id())
                     #t.join()
 
             if event.from_user:
