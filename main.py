@@ -217,6 +217,22 @@ while True:
                     else:
                         rollMoive.append(ChatRoll(event))
                         session_api.messages.send(chat_id=event.chat_id, message='Все, кто готов смотреть + в чат', random_id=get_random_id())
+
+                        chat_title = session_api.messages.getConversationsById(peer_ids=event.chat_id + 2000000000)
+                        chat_title = chat_title.get('items')[0].get('chat_settings').get('title')
+                        chat_info = session_api.messages.getConversationMembers(peer_id=event.chat_id + 2000000000)
+                        for i in range(len(chat_info.get('profiles'))):
+                            id = chat_info.get('profiles')[i].get('id')
+                            try:
+                                session_api.messages.send(peer_id=id,
+                                                        message= '&#9888; &#9888; &#9888;\n&#128253; '
+                                                                 'В бесседе &#128173; ' + chat_title + ' &#128173; '
+                                                                 'начался сбор фильмов, скорее ставь &#128172; [ + ] &#128172;'
+                                                                 ', чтобы присоединится. &#128253;\n&#9888; &#9888; &#9888;',
+                                                        random_id=get_random_id())
+                            except:
+                                print()
+
                         break
 
                 elif event.obj.text.lower() == 'привет':
@@ -260,17 +276,17 @@ while True:
                                 movies = ChekAlreadyUse(event.obj.from_id, event.chat_id)
                                 if len(movies) == 0:
 
-                                    keybord = VkKeyboard(one_time=True)
+                                    #keybord = VkKeyboard(one_time=True)
                                     #keybord.add_button('Ебу собак', color=VkKeyboardColor.PRIMARY)
                                     #keybord.add_line()
                                     #keybord.add_button('Не ебу собак', color=VkKeyboardColor.DEFAULT)
                                     #keybord.add_line()
                                     #keybord.add_button('Ебу детей', color=VkKeyboardColor.DEFAULT)
-                                    keybord = keybord.get_keyboard()
+                                    #keybord = keybord.get_keyboard()
 
                                     session_api.messages.send(peer_id = event.obj.from_id,
                                                         message='Скидывай назвние фильма сюда',
-                                                        random_id=get_random_id(), keybord = keybord)
+                                                        random_id=get_random_id())
                                     only.newMan(event.chat_id, event.obj.from_id)
                                     break
                                 elif len(movies) < 3:
