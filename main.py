@@ -96,10 +96,12 @@ class ChatRoll:
 
     def newMan(self, chat_id, man_id):
         self.man.append(Man(chat_id, man_id))
+        print('Создал нового персонажа без фильмов' + str(man_id))
 
     def newManm(self,chat_id,man_id, movies):
         self.man.append(Man(chat_id, man_id))
         self.man[len(man)-1].movies = movies
+        print('Создал нового персонажа ' + str(man_id) + str(movies))
 
     def getMan(self):
         return self.man
@@ -114,6 +116,8 @@ class ChatRoll:
                                       random_id=get_random_id())
 
     def roll(self):
+        for i in range(len(self.man)):
+            print(str(self.man[i].man_id) + str(self.man[i].movies))
 
         if len(self.man) == 0:
             return '0','0'
@@ -159,8 +163,8 @@ while True:
         if event.type == VkBotEventType.MESSAGE_NEW:
             again_moviesroll = False
             again_plus = False
-            print(u'Сообщение пришло в: ' + str(datetime.strftime(datetime.now(), "%H:%M:%S")))
-            print(u'Текст сообщения: ' + str(event.obj.text))
+            #print(u'Сообщение пришло в: ' + str(datetime.strftime(datetime.now(), "%H:%M:%S")))
+            #print(u'Текст сообщения: ' + str(event.obj.text))
 
             if event.from_chat:
                 try:
@@ -178,7 +182,7 @@ while True:
                                                 random_id=get_random_id())
                         break
                 except:
-                    print('hello')
+                    print('')
 
 
                 if event.obj.text.lower() == '!команды':
@@ -207,7 +211,7 @@ while True:
                         if man[j].man_id == event.obj.from_id:
                             again_plus = True
                 except:
-                    print('hello')
+                    print('')
 
                 if event.obj.text.lower() == '!фильм':
                     if again_moviesroll:
@@ -216,6 +220,7 @@ while True:
                         break
                     else:
                         rollMoive.append(ChatRoll(event))
+                        print('Создал новый класс')
                         session_api.messages.send(chat_id=event.chat_id, message='Все, кто готов смотреть + в чат', random_id=get_random_id())
 
                         chat_title = session_api.messages.getConversationsById(peer_ids=event.chat_id + 2000000000)
@@ -231,7 +236,7 @@ while True:
                                                                  ', чтобы присоединится. &#128253;\n&#9888; &#9888; &#9888;',
                                                         random_id=get_random_id())
                             except:
-                                print()
+                                print('Не смог отписать' + str(id))
 
                         break
 
@@ -274,26 +279,21 @@ while True:
                             try:
                                 movies = []
                                 movies = ChekAlreadyUse(event.obj.from_id, event.chat_id)
+                                print('Принял от ' + str(event.obj.from_id) + str(movies))
                                 if len(movies) == 0:
-
-                                    #keybord = VkKeyboard(one_time=True)
-                                    #keybord.add_button('Ебу собак', color=VkKeyboardColor.PRIMARY)
-                                    #keybord.add_line()
-                                    #keybord.add_button('Не ебу собак', color=VkKeyboardColor.DEFAULT)
-                                    #keybord.add_line()
-                                    #keybord.add_button('Ебу детей', color=VkKeyboardColor.DEFAULT)
-                                    #keybord = keybord.get_keyboard()
 
                                     session_api.messages.send(peer_id = event.obj.from_id,
                                                         message='Скидывай назвние фильма сюда',
                                                         random_id=get_random_id())
                                     only.newMan(event.chat_id, event.obj.from_id)
+                                    print('Создал нового персонажа' + str(event.obj.from_id))
                                     break
                                 elif len(movies) < 3:
                                     session_api.messages.send(peer_id=event.obj.from_id,
                                                               message='Принял от тебя ' + str(len(movies)) + ' фильма, жду еще ' + str((3 - len(movies))),
                                                               random_id=get_random_id())
                                     only.newManm(event.chat_id, event.obj.from_id, movies)
+                                    print('Создал нового персонажа' + str(event.obj.from_id) + str(movies))
                                     break
                                 else:
                                     session_api.messages.send(peer_id=event.obj.from_id,
@@ -301,6 +301,7 @@ while True:
                                                                         '&#10071; Тебе доступна команда &#128172; [ !заменить <номер фильма> ] &#128172;',
                                                               random_id=get_random_id())
                                     only.newManm(event.chat_id, event.obj.from_id, movies)
+                                    print('Создал нового персонажа' + str(event.obj.from_id) + str(movies))
                                     break
 
                                 #only.newMan(event.chat_id, event.obj.from_id)
