@@ -24,6 +24,39 @@ session_api = vk_session.get_api()
 longpoll = VkBotLongPoll(vk_session, '181453927')
 
 
+def searchMan(rollMoive):
+    man = []
+    try:
+        for i in range(len(rollMoive)):
+            man = rollMoive[i].getMan()
+        return man
+    except:
+        searchMan(rollMoive)
+
+
+def searchChat(rollMoive):
+    only = []
+    again_moviesroll = False
+    try:
+        for i in range(len(rollMoive)):
+            if rollMoive[i].chat_id == event.chat_id:
+                only = rollMoive[i]
+                again_moviesroll = True
+        return only,again_moviesroll
+    except:
+        searchChat(rollMoive)
+
+def RemoveRollMovie(i,this, chat_id):
+    time.sleep(1800)
+    this.SendFilmsToAll()
+    session_api.messages.send(chat_id=chat_id, message='&#9888; &#9888; &#9888;\n&#10071;'
+                                                       ' Сбор фильмов был остановлен. &#10071;\n&#10071;'
+                                                       ' Время сбора фильмов вышло. &#10071;\n'
+                                                       '&#9888; &#9888; &#9888;',
+                              random_id=get_random_id())
+    rollMoive.remove(this)
+
+
 def ChekAlreadyUse(man_id, chat_id):
     try:
         history = session_api.messages.getHistory(offset = 0, count = 25, user_id = man_id)
@@ -41,8 +74,6 @@ def ChekAlreadyUse(man_id, chat_id):
     except:
         movies = []
         return movies
-
-    print(history)
 
 #def Typing(user_id):
     #boolTuping = True
@@ -201,10 +232,8 @@ while True:
                                               random_id=get_random_id())
                     break
 
-                for i in range(len(rollMoive)):
-                    if rollMoive[i].chat_id == event.chat_id:
-                        only = rollMoive[i]
-                        again_moviesroll = True
+                only,again_moviesroll = searchChat(rollMoive)
+
                 try:
                     man = only.getMan()
                     for j in range(len(only.man)):
@@ -220,6 +249,8 @@ while True:
                         break
                     else:
                         rollMoive.append(ChatRoll(event))
+                        thRM = rollMoive[len(rollMoive)-1]
+                        threading.Thread(target=RemoveRollMovie, args=(0,thRM, event.chat_id),daemon=True).start()
                         print('Создал новый класс')
                         session_api.messages.send(chat_id=event.chat_id, message='Все, кто готов смотреть + в чат', random_id=get_random_id())
 
@@ -358,12 +389,11 @@ while True:
                 only = None
                 from_group = False
 
-                for i in range(len(rollMoive)):
-                    man = rollMoive[i].getMan()
-                    for j in range(len(rollMoive[i].man)):
-                        if man[j].man_id == event.obj.from_id:
-                            only = man[j]
-                            from_group = True
+                man = searchMan(rollMoive)
+                for j in range(len(man)):
+                    if man[j].man_id == event.obj.from_id:
+                        only = man[j]
+                        from_group = True
 
                 #keybord = None
 
