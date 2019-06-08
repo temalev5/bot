@@ -10,14 +10,20 @@ from vk_api.utils import get_random_id
 from sm import NameToID,movieToText,getName,getNameByID
 import os
 from lordfilm import SearchURLMovies
+import sqlite3
 
 
+conn = sqlite3.connect('test.sqlite')
+cursor = conn.cursor()
+cursor.execute('SELECT chats.chat_id, chats.ex_janre,chats.ex_rating FROM chats')
+result = cursor.fetchall()
+print(str(result))
 
 #login, password = "login", "password"
 #vk_session = vk_api.VkApi(login, password)
 #vk_session.auth()
 
-#token = os.environ.get('BOT_TOKEN')
+token = os.environ.get('BOT_TOKEN')
 vk_session = vk_api.VkApi(token=token)
 
 session_api = vk_session.get_api()
