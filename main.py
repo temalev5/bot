@@ -7,17 +7,17 @@ from vk_api.bot_longpoll import VkBotLongPoll, VkBotEventType
 from vk_api.keyboard import VkKeyboard,VkKeyboardColor
 from datetime import datetime
 from vk_api.utils import get_random_id
-from sm import NameToID
-from sm import getName
+from sm import NameToID,movieToText,getName,getNameByID
 import os
 from lordfilm import SearchURLMovies
+
 
 
 #login, password = "login", "password"
 #vk_session = vk_api.VkApi(login, password)
 #vk_session.auth()
 
-token = os.environ.get('BOT_TOKEN')
+#token = os.environ.get('BOT_TOKEN')
 vk_session = vk_api.VkApi(token=token)
 
 session_api = vk_session.get_api()
@@ -48,13 +48,14 @@ def searchChat(rollMoive):
 
 def RemoveRollMovie(i,this, chat_id):
     time.sleep(1800)
-    this.SendFilmsToAll()
-    session_api.messages.send(chat_id=chat_id, message='&#9888; &#9888; &#9888;\n&#10071;'
+    if (rollMoive.count(this)>0):
+        this.SendFilmsToAll()
+        session_api.messages.send(chat_id=chat_id, message='&#9888; &#9888; &#9888;\n&#10071;'
                                                        ' Сбор фильмов был остановлен. &#10071;\n&#10071;'
                                                        ' Время сбора фильмов вышло. &#10071;\n'
                                                        '&#9888; &#9888; &#9888;',
-                              random_id=get_random_id())
-    rollMoive.remove(this)
+                                random_id=get_random_id())
+        rollMoive.remove(this)
 
 
 def ChekAlreadyUse(man_id, chat_id):
@@ -68,9 +69,12 @@ def ChekAlreadyUse(man_id, chat_id):
                     movies = history.get('items')[i].get('text').split('\n')
                     movies.pop(0)
                     break
-        if len(movies) > 3:
-            movies = movies[0:3]
-        return movies
+        movie = []
+        for i in range(len(movies)):
+            movie.append(getNameByID(movies[i][movies[i].find("(")+1:movies[i].find(")")]))
+        if len(movie) > 3:
+            movie = movie[0:3]
+        return movie
     except:
         movies = []
         return movies
@@ -101,12 +105,12 @@ class Man:
         username = userinfo[0].get('first_name')
         return username
 
-    def SearchMovies(self,movi):
+    def SearchMovies(self,movi,movie):
         self.SearchMovie = getName(movi, self.countFindFilm)
-        self.targetMovie = self.SearchMovie
+        self.targetMovie = movie
 
     def TargetMovie(self,movi):
-        self.targetMovie = getName(movi, self.countFindFilm)
+        self.targetMovie = movi
 
     def SetMovies(self):
         self.movies.append(self.targetMovie)
@@ -141,7 +145,7 @@ class ChatRoll:
         for i in range(len(self.man)):
             message = '$' + str(self.chat_id) + '\n'
             for j in range(len(self.man[i].movies)):
-                message += man[i].movies[j] + '\n'
+                message += man[i].movies[j].title + "("+str(man[i].movies[j].id)+")" + '\n'
             session_api.messages.send(peer_id=man[i].man_id,
                                       message=message,
                                       random_id=get_random_id())
@@ -164,14 +168,14 @@ class ChatRoll:
                 return '0','0'
             elif len(self.man[i].movies) == 3:
                 for j in range(len(self.man[i].movies)):
-                    filmlist += man[i].movies[j] + '\n'
+                    filmlist += man[i].movies[j].title + '\n'
                     listfilm.append(man[i].movies[j])
         filmlist += '***********************\n_______________________________________________________________\n'
         rnd = random.randint(0, len(listfilm)-1)
         removiemovie = listfilm[rnd]
-        retlistfiml += NameToID(listfilm[rnd], 0)
+        retlistfiml += movieToText(removiemovie)
 
-        url = SearchURLMovies(removiemovie)
+        url = SearchURLMovies(removiemovie.title)
 
         retlistfiml += '\n&#9889;' + url + ' &#9889;'
 
@@ -414,9 +418,9 @@ while True:
                             #t.start()
                             behmovie = only.SearchMovie
                             only.countFindFilm += 1
-                            message = NameToID(behmovie, only.countFindFilm)
+                            movie, message = NameToID(behmovie, only.countFindFilm)
                             if message != '0':
-                                only.TargetMovie(behmovie)
+                                only.TargetMovie(movie)
                             else:
                                 only.countFindFilm = 0
                                 session_api.messages.send(peer_id=event.obj.from_id,
@@ -460,9 +464,9 @@ while True:
                         else:
                             #t = threading.Thread(target=Typing, args=(event.obj.from_id,))
                             #t.start()
-                            message = NameToID(event.obj.text, 0)
+                            movie,message = NameToID(event.obj.text, 0)
                             if message != '0':
-                                only.SearchMovies(event.obj.text)
+                                only.SearchMovies(event.obj.text,movie)
                             else:
                                 session_api.messages.send(peer_id=event.obj.from_id,
                                                           message='&#9888; &#9888; &#9888;\n&#10071;'
@@ -515,7 +519,7 @@ while True:
                         break
 
                     if event.obj.text != '+' and event.obj.text != '-':
-                        message = NameToID(event.obj.text, 0)
+                        movie,message = NameToID(event.obj.text, 0)
                         if message == '0':
                             session_api.messages.send(peer_id=event.obj.from_id,
                                                       message='&#9888; &#9888; &#9888;\n&#10071;'
