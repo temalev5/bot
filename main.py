@@ -10,14 +10,7 @@ from vk_api.utils import get_random_id
 from sm import NameToID,movieToText,getName,getNameByID
 import os
 from lordfilm import SearchURLMovies
-import sqlite3
 
-
-conn = sqlite3.connect('test.sqlite')
-cursor = conn.cursor()
-cursor.execute('SELECT chats.chat_id, chats.ex_janre,chats.ex_rating FROM chats')
-result = cursor.fetchall()
-print(str(result))
 
 #login, password = "login", "password"
 #vk_session = vk_api.VkApi(login, password)
@@ -134,6 +127,8 @@ class ChatRoll:
     def __init__(self, event):
         self.chat_id = event.chat_id
         self.man = []
+        self.ex_rating = None
+        self.ex_rating_condition = None
 
     def newMan(self, chat_id, man_id):
         self.man.append(Man(chat_id, man_id))
@@ -499,7 +494,7 @@ while True:
                                 break
                             else:
                                 removie = only.Removie(num)
-                                message = 'Фильм &#128253; ' + removie + ' &#128253; был удален\n' \
+                                message = 'Фильм &#128253; ' + removie.title + ' &#128253; был удален\n' \
                                                                          'Жду от тебя фильма на замену.'
                                 session_api.messages.send(peer_id=event.obj.from_id,
                                                           message=message,
