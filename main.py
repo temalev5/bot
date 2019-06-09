@@ -17,12 +17,11 @@ from lordfilm import SearchURLMovies
 #vk_session = vk_api.VkApi(login, password)
 #vk_session.auth()
 
-#token = os.environ.get('BOT_TOKEN')
-token = '767809b3a110bf29b28438d837480302789fa7a87232ed8e8a2cd2925d18dedf753919bd340fb62d82f0d'
+token = os.environ.get('BOT_TOKEN')
 vk_session = vk_api.VkApi(token=token)
 
 session_api = vk_session.get_api()
-longpoll = VkBotLongPoll(vk_session, '181864086')
+longpoll = VkBotLongPoll(vk_session, '181453927')
 
 
 
