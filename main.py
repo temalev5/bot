@@ -503,19 +503,19 @@ while True:
                                     value = event.obj.text[event.obj.text.find(' ') + 1:]
                                     value = value[value.find(' ') + 1:]+";"
                                     validate = saveToBD(event.chat_id,name,value.lower(),t)
-                    if validate==False:
-                        break
-                    message = ""
-                    if (name == "актера"): name = "актер"
-                    if (t=="!исключить"):
-                        message = "&#128204; Исключен " + name + ' &#128253; ' + value[:-1] + ' &#128253;'
-                        a = 10
-                    elif (t=="!вернуть"):
-                        message = "&#128204; " + name + ' &#128253; ' + value[:-1] + " &#128253; теперь доступен &#9989;"
+                                    if validate==False:
+                                        break
+                                    message = ""
+                                    if (name == "актера"): name = "актер"
+                                    if (t=="!исключить"):
+                                        message = "&#128204; Исключен " + name + ' &#128253; ' + value[:-1] + ' &#128253;'
+                                        a = 10
+                                    elif (t=="!вернуть"):
+                                        message = "&#128204; " + name + ' &#128253; ' + value[:-1] + " &#128253; теперь доступен &#9989;"
 
-                    session_api.messages.send(chat_id=event.chat_id,
-                                              message=message,
-                                              random_id=get_random_id())
+                                    session_api.messages.send(chat_id=event.chat_id,
+                                                              message=message,
+                                                              random_id=get_random_id())
 
 
 
@@ -535,11 +535,10 @@ while True:
                                         value = value[value.find(' ') + 1:]
                                         value = value[value.find(' ')+1:]
                                         saveToBDset(event.chat_id,name,condition,value)
-                    message = "&#128204; Установлен параметр &#128253; "+ name + " " + "фильма &#128253; " + condition + " &#11088;" + value + " &#11088;"
-                    session_api.messages.send(chat_id=event.chat_id,
-                                              message=message,
-                                              random_id=get_random_id())
-                    a=10
+                                        message = "&#128204; Установлен параметр &#128253; "+ name + " " + "фильма &#128253; " + condition + " &#11088;" + value + " &#11088;"
+                                        session_api.messages.send(chat_id=event.chat_id,
+                                                                  message=message,
+                                                                  random_id=get_random_id())
 
 
 
