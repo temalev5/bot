@@ -65,6 +65,8 @@ def saveBD(chat):
         result = cursor.fetchall()
         for j in range(len(chat.man[i].movies)):
             movies += chat.man[i].movies[j].title + "(" + str(chat.man[i].movies[j].id) + ")" + ";"
+        if (movies==""):
+            break
         if (result):
             cursor.execute("UPDATE users SET movies = ? WHERE chat_id=? AND user_id=?", (movies,chat.chat_id,chat.man[i].man_id,))
         else:
