@@ -32,6 +32,7 @@ def saveToBD(chat_id,name,value,t):
     cursor = conn.cursor()
     if (name == "актера"): name = "ex_actors"
     if (name == "жанр"): name = "ex_janre"
+    if (name == "страну"): name = "ex_country"
     cursor.execute('SELECT chats.'+ name +' FROM chats WHERE chat_id=?', (chat_id,))
     result = cursor.fetchall()
     if (result):

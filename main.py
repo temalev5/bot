@@ -17,11 +17,12 @@ from lordfilm import SearchURLMovies
 #vk_session = vk_api.VkApi(login, password)
 #vk_session.auth()
 
-token = os.environ.get('BOT_TOKEN')
+#token = os.environ.get('BOT_TOKEN')
+token = '767809b3a110bf29b28438d837480302789fa7a87232ed8e8a2cd2925d18dedf753919bd340fb62d82f0d'
 vk_session = vk_api.VkApi(token=token)
 
 session_api = vk_session.get_api()
-longpoll = VkBotLongPoll(vk_session, '181453927')
+longpoll = VkBotLongPoll(vk_session, '181864086')
 
 
 
@@ -64,7 +65,7 @@ def chekLegitimacy(movie,chat):
         for i in range(len(ex_country)):
             for j in range(len(movie.countries)):
                 if (ex_country[i].lower()==movie.countries[j].lower()):
-                    return "Запрещенная страна" + movie.countries[j]
+                    return "Запрещенная страна " + movie.countries[j]
 
 
     if ((chat.ex_janre) and (movie.genres)):
@@ -359,8 +360,26 @@ while True:
                         thRM = rollMoive[len(rollMoive)-1]
                         thRM.openBD()
                         threading.Thread(target=RemoveRollMovie, args=(0,thRM, event.chat_id),daemon=True).start()
+                        message = "&#9888; Начался сбор фильмов &#9888;\n"
+                        if ((thRM.ex_actors) or (thRM.ex_country) or (thRM.ex_janre) or (thRM.ex_rating) or (thRM.ex_time) or (thRM.ex_year)):
+                            message += "&#10071; Параметры сбора :\n_______________________________\n"
+                            if (thRM.ex_actors):
+                                message += "&#128204; Исключенные актеры: &#128253; "+thRM.ex_actors.replace(';',' &#128253; ')+"\n"
+                            if (thRM.ex_country):
+                                message += "&#128204; Исключенные страны: &#128253; " + thRM.ex_country.replace(';',' &#128253; ')+"\n"
+                            if (thRM.ex_janre):
+                                message += "&#128204; Исключенные жанры: &#128253; " + thRM.ex_janre.replace(';',
+                                                                                                                ' &#128253; ') + "\n"
+                            if (thRM.ex_rating):
+                                message += "&#128204; Рейтинг "+thRM.ex_rating_condition+" &#11088; " + str(thRM.ex_rating) + " &#11088;\n"
+                            if (thRM.ex_time):
+                                message += "&#128204; Время " + thRM.ex_time_condition + " &#11088; " + str(thRM.ex_time) + " &#11088;\n"
+                            if (thRM.ex_year):
+                                message += "&#128204; Год " + thRM.ex_year_condition + " &#11088; " + str(thRM.ex_year) + " &#11088;\n"
+                            message += "_______________________________\n"
+                        message += "&#10071; Поставь &#128172; [ + ] &#128172; в чат, если готов смотреть &#10071;"
                         print('Создал новый класс')
-                        session_api.messages.send(chat_id=event.chat_id, message='Все, кто готов смотреть + в чат', random_id=get_random_id())
+                        session_api.messages.send(chat_id=event.chat_id, message=message, random_id=get_random_id())
 
                         chat_title = session_api.messages.getConversationsById(peer_ids=event.chat_id + 2000000000)
                         chat_title = chat_title.get('items')[0].get('chat_settings').get('title')
@@ -499,19 +518,25 @@ while True:
                             if (item.get('is_admin')):
                                 name = event.obj.text[event.obj.text.find(' ') + 1:]
                                 name = name[:name.find(' ')].lower()
-                                if (name == "актера") or (name == "жанр"):
+                                if (name == "актера") or (name == "жанр") or (name == "страну"):
                                     value = event.obj.text[event.obj.text.find(' ') + 1:]
                                     value = value[value.find(' ') + 1:]+";"
                                     validate = saveToBD(event.chat_id,name,value.lower(),t)
                                     if validate==False:
                                         break
                                     message = ""
+                                    what = "Исключен"
+                                    whats = "доступен"
                                     if (name == "актера"): name = "актер"
+                                    if (name == "страну"):
+                                        name = "страна"
+                                        what = "Исключена"
+                                        whats = "доступна"
                                     if (t=="!исключить"):
-                                        message = "&#128204; Исключен " + name + ' &#128253; ' + value[:-1] + ' &#128253;'
+                                        message = "&#128204; "+ what + " " + name + ' &#128253; ' + value[:-1] + ' &#128253;'
                                         a = 10
                                     elif (t=="!вернуть"):
-                                        message = "&#128204; " + name + ' &#128253; ' + value[:-1] + " &#128253; теперь доступен &#9989;"
+                                        message = "&#128204; " + name + ' &#128253; ' + value[:-1] + " &#128253; теперь "+ whats + " &#9989;"
 
                                     session_api.messages.send(chat_id=event.chat_id,
                                                               message=message,
