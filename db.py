@@ -18,15 +18,15 @@ def saveToBDset(chat_id,name,condition,value):
         name = "ex_year"
         condition = "ex_year_condition"
 
-    cursor.execute('SELECT chats.' + name + ' FROM chats WHERE chat_id=?', (chat_id,))
+    cursor.execute('SELECT chats.' + name + ' FROM chats WHERE chat_id=%s', (str(chat_id),))
     result = cursor.fetchall()
 
     if (result):
-        cursor.execute("UPDATE chats SET " + name + " = ?, "+ condition +" = ? WHERE chat_id=?",
-                       (value, value_condition, chat_id))
+        cursor.execute("UPDATE chats SET " + name + " = %s, "+ condition +" = %s WHERE chat_id=%s",
+                       (str(value), str(value_condition), str(chat_id)))
     else:
-        cursor.execute('INSERT INTO chats(chat_id,' + name + ','+condition+') VALUES(?,?,?)',
-                       (chat_id, value,value_condition))
+        cursor.execute('INSERT INTO chats(chat_id,' + name + ','+condition+') VALUES(%s,%s,%s)',
+                       (str(chat_id), str(value),str(value_condition)))
 
     conn.commit()
 
@@ -36,7 +36,7 @@ def saveToBD(chat_id,name,value,t):
     if (name == "актера"): name = "ex_actors"
     if (name == "жанр"): name = "ex_janre"
     if (name == "страну"): name = "ex_country"
-    cursor.execute('SELECT chats.'+ name +' FROM chats WHERE chat_id=?', (chat_id,))
+    cursor.execute('SELECT chats.'+ name +' FROM chats WHERE chat_id=%s', (str(chat_id),))
     result = cursor.fetchall()
     if (result):
         if (result[0][0]):
@@ -53,27 +53,27 @@ def saveToBD(chat_id,name,value,t):
         else:
             setvalue = value
 
-        cursor.execute("UPDATE chats SET "+name+" = ? WHERE chat_id=?",
-                       (setvalue,chat_id))
+        cursor.execute("UPDATE chats SET "+name+" = %s WHERE chat_id=%s",
+                       (str(setvalue),str(chat_id)))
     else:
-        cursor.execute('INSERT INTO chats(chat_id,'+name+') VALUES(?,?)',
-                       (chat_id,value.lower()))
+        cursor.execute('INSERT INTO chats(chat_id,'+name+') VALUES(%s,%s)',
+                       (str(chat_id),str(value.lower())))
     conn.commit()
 
 def saveBD(chat):
     cursor = conn.cursor()
     for i in range(len(chat.man)):
         movies = ""
-        cursor.execute('SELECT users.movies FROM users WHERE chat_id=? AND user_id=?', (chat.chat_id,chat.man[i].man_id))
+        cursor.execute('SELECT users.movies FROM users WHERE chat_id=%s AND user_id=%s', (str(chat.chat_id),str(chat.man[i].man_id)))
         result = cursor.fetchall()
         for j in range(len(chat.man[i].movies)):
             movies += chat.man[i].movies[j].title + "(" + str(chat.man[i].movies[j].id) + ")" + ";"
         if (movies==""):
             break
         if (result):
-            cursor.execute("UPDATE users SET movies = ? WHERE chat_id=? AND user_id=?", (movies,chat.chat_id,chat.man[i].man_id,))
+            cursor.execute("UPDATE users SET movies = %s WHERE chat_id=%s AND user_id=%s", (str(movies),str(chat.chat_id),str(chat.man[i].man_id),))
         else:
-            cursor.execute('INSERT INTO users(user_id,chat_id,movies) VALUES(?,?,?)', (chat.man[i].man_id,chat.chat_id,movies))
+            cursor.execute('INSERT INTO users(user_id,chat_id,movies) VALUES(%s,%s,%s)', (str(chat.man[i].man_id),str(chat.chat_id),dtr(movies)))
         conn.commit()
 
 
@@ -89,12 +89,12 @@ def useDB(chat_id):
                    'chats.ex_time_condition,'
                    'chats.ex_actors,'
                    'chats.ex_country'
-                   ' FROM chats WHERE chat_id=?', (chat_id,))
+                   ' FROM chats WHERE chat_id=%s', (str(chat_id),))
     result = cursor.fetchall()
     return result
 
 def useDBForMovies(user_id,chat_id):
     cursor = conn.cursor()
-    cursor.execute('SELECT users.movies FROM users WHERE chat_id=? AND user_id=?', (chat_id,user_id) )
+    cursor.execute('SELECT users.movies FROM users WHERE chat_id=%s AND user_id=%s', (str(chat_id),str(user_id)) )
     result = cursor.fetchall()
     return result
