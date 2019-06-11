@@ -73,7 +73,7 @@ def saveBD(chat):
         if (result):
             cursor.execute("UPDATE users SET movies = %s WHERE chat_id=%s AND user_id=%s", (str(movies),str(chat.chat_id),str(chat.man[i].man_id),))
         else:
-            cursor.execute('INSERT INTO users(user_id,chat_id,movies) VALUES(%s,%s,%s)', (str(chat.man[i].man_id),str(chat.chat_id),dtr(movies)))
+            cursor.execute('INSERT INTO users(user_id,chat_id,movies) VALUES(%s,%s,%s)', (str(chat.man[i].man_id),str(chat.chat_id),str(movies)))
         conn.commit()
 
 
