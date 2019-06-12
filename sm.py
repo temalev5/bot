@@ -92,7 +92,7 @@ def NameToID(name, pos):
             try:
                 movie_list[pos].genres.remove('... слова')
             except:
-                print('hello')
+                print('')
 
             nametoid = movieToText(movie_list[pos])
 

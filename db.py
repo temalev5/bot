@@ -1,9 +1,11 @@
-#import sqlite3
+import sqlite3
 import psycopg2
 import os
 
 DATABASE_URL = os.environ['DATABASE_URL']
 conn = psycopg2.connect(DATABASE_URL, sslmode='require')
+
+#conn = sqlite3.connect('db.sqlite')
 
 def saveToBDset(chat_id,name,condition,value):
     cursor = conn.cursor()

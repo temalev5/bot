@@ -169,9 +169,9 @@ class Man:
         self.ex_movies = []
         self.movies = []
         self.mc = 0
-        self.searchMovie = '0'
+        self.searchMovie = None
         self.countFindFilm = 0
-        self.targetMovie = '0'
+        self.targetMovie = None
 
     def getName(self):
         userinfo = session_api.users.get(user_ids=self.man_id)
@@ -179,7 +179,7 @@ class Man:
         return username
 
     def SearchMovies(self,movi,movie):
-        self.SearchMovie = getName(movi, self.countFindFilm)
+        self.searchMovie = getName(movi, self.countFindFilm)
         self.targetMovie = movie
 
     def TargetMovie(self,movi):
@@ -622,10 +622,10 @@ while True:
 
                     if len(only.movies) < 3:
 
-                        if event.obj.text == '-':
+                        if ((event.obj.text == '-') and (only.searchMovie)):
                             #t = threading.Thread(target=Typing, args=(event.obj.from_id,))
                             #t.start()
-                            behmovie = only.SearchMovie
+                            behmovie = only.searchMovie
                             only.countFindFilm += 1
                             movie, message = NameToID(behmovie, only.countFindFilm)
                             if message != '0':
@@ -646,7 +646,7 @@ while True:
                                                       random_id=get_random_id(), keyboard=keybord)
                             break
                             #t.join()
-                        elif event.obj.text == '+':
+                        elif ((event.obj.text == '+') and (only.searchMovie)):
                             only.countFindFilm = 0
 
                             seconly = searchChat(rollMoive, only.chat_id)[0]
@@ -661,6 +661,8 @@ while True:
                                 break
 
                             only.SetMovies()
+                            only.searchMovie = None
+                            only.targetMovie = None
 
                             #keybord = VkKeyboard(one_time=True)
                             #keybord.add_button('Изменить первый', color=VkKeyboardColor.PRIMARY)
