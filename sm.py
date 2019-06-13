@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 from kinopoisk.movie import Movie
+from main import ratingEmoji
 
 
 def getName(name, pos):
@@ -37,7 +38,6 @@ def movieToText(name):
         nametoid += name.tagline + '\n'
         nametoid += '_______________________________________________________________\n'
         nametoid += 'Актеры: '
-        # nametoid = Coding(nametoid)
 
         for i in range(len(name.actors)):
             act = name.actors[i].name
@@ -59,22 +59,21 @@ def movieToText(name):
 
         nametoid += 'Рейтинг: ' + str(name.rating)
 
-        if name.rating != None:
+        nametoid += ratingEmoji(name.rating)
+        #if name.rating != None:
 
-            if name.rating < 5.5:
-                nametoid += '&#10060;\n'
-            elif name.rating < 7.0:
-                nametoid += '&#9888;\n'
-            else:
-                nametoid += '&#9989;\n'
-        else:
-            nametoid += '\n'
+        #    if name.rating < 5.5:
+        #        nametoid += '&#10060;\n'
+        #    elif name.rating < 7.0:
+        #        nametoid += '&#9888;\n'
+        #    else:
+        #        nametoid += '&#9989;\n'
+        #else:
+        #    nametoid += '\n'
 
         nametoid += 'Время: ' + str(name.runtime) + 'мин\n'
         nametoid += '_______________________________________________________________\n'
-        # nametoid += 'Это он?&#129300; Отпиши + или -'
 
-        # print(movie_list[pos].title.encode('utf8'))
         print(name.plot)
         print(name.rating)
         return nametoid

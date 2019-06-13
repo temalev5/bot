@@ -4,8 +4,6 @@ import os
 DATABASE_URL = os.environ['DATABASE_URL']
 conn = psycopg2.connect(DATABASE_URL, sslmode='require')
 
-#conn = sqlite3.connect('db.sqlite')
-
 def saveToBDset(chat_id,name,condition,value):
     cursor = conn.cursor()
     value_condition=condition
@@ -69,13 +67,12 @@ def saveBD(chat):
         result = cursor.fetchall()
         for j in range(len(chat.man[i].movies)):
             movies += chat.man[i].movies[j].title + "(" + str(chat.man[i].movies[j].id) + ")" + ";"
-        if (movies==""):
-            break
-        if (result):
-            cursor.execute("UPDATE users SET movies = %s WHERE chat_id=%s AND user_id=%s", (str(movies),str(chat.chat_id),str(chat.man[i].man_id),))
-        else:
-            cursor.execute('INSERT INTO users(user_id,chat_id,movies) VALUES(%s,%s,%s)', (str(chat.man[i].man_id),str(chat.chat_id),str(movies)))
-        conn.commit()
+        if (movies!=""):
+            if (result):
+                cursor.execute("UPDATE users SET movies = %s WHERE chat_id=%s AND user_id=%s", (str(movies),str(chat.chat_id),str(chat.man[i].man_id),))
+            else:
+                cursor.execute('INSERT INTO users(user_id,chat_id,movies) VALUES(%s,%s,%s)', (str(chat.man[i].man_id),str(chat.chat_id),str(movies)))
+            conn.commit()
 
 
 def useDB(chat_id):

@@ -5,7 +5,6 @@ import vk_api
 import random
 from vk_api.bot_longpoll import VkBotLongPoll, VkBotEventType
 from vk_api.keyboard import VkKeyboard,VkKeyboardColor
-from datetime import datetime
 from db import useDB,useDBForMovies,saveBD,saveToBD,saveToBDset,notifyDB
 from vk_api.utils import get_random_id
 from sm import NameToID,movieToText,getName,getNameByID
@@ -23,7 +22,15 @@ vk_session = vk_api.VkApi(token=token)
 session_api = vk_session.get_api()
 longpoll = VkBotLongPoll(vk_session, '181453927')
 
-
+def ratingEmoji(rating):
+    if (rating < 5):
+        return '&#10060;\n'
+    elif (rating < 7):
+        return '&#9888;\n'
+    elif (rating <= 10):
+        return '&#9989;\n'
+    else:
+        return '\n'
 
 def cheker(one,condition,two):
 
@@ -132,34 +139,12 @@ def ChekAlreadyUse(man_id, chat_id):
         return movie
 
 
-    #try:
-    #    history = session_api.messages.getHistory(offset = 0, count = 25, user_id = man_id)
-    #    for i in range(25):
-    #        if history.get('items')[i].get('text')[0] == '$':
-    #           term = history.get('items')[i].get('text').find('\n')
-    #            message_chat_id = int(history.get('items')[i].get('text')[1:term])
-    #            if chat_id == message_chat_id:
-    #                movies = history.get('items')[i].get('text').split('\n')
-    #                movies.pop(0)
-    #                break
-    #    movie = []
-    #    for i in range(len(movies)):
-    #        movie.append(getNameByID(movies[i][movies[i].find("(")+1:movies[i].find(")")]))
-    #    if len(movie) > 3:
-    #        movie = movie[0:3]
-    #    return movie
-    #except:
-    #    movies = []
-    #    return movies
-
 #def Typing(user_id):
     #boolTuping = True
     #while boolTuping:
         #print('успел')
         #session_api.messages.setActivity(peer_id=user_id,type = 'typing')
         #time.sleep(5)
-
-
 
 
 class Man:
@@ -226,7 +211,6 @@ class ChatRoll:
             self.ex_actors = result[0][7]
             self.ex_country = result[0][8]
             if (result[0][9] is not None):  self.notify = result[0][9]
-            a = 10
 
     def newMan(self, chat_id, man_id):
         self.man.append(Man(chat_id, man_id))
@@ -251,15 +235,15 @@ class ChatRoll:
                 elif (j == 2):
                     message += '3&#8419; '
                 message += self.man[i].movies[j].title + "(" + str(self.man[i].movies[j].id) + ') '
-                if (self.man[i].movies[j].rating < 5):
-                    message += '&#10060;\n'
-                elif (self.man[i].movies[j].rating < 7):
-                    message += '&#9888;\n'
-                elif (self.man[i].movies[j].rating <= 10):
-                    message += '&#9989;\n'
-                else:
-                    message += '\n'
-                #message += man[i].movies[j].title + "("+str(man[i].movies[j].id)+")" + '\n'
+                message += ratingEmoji(self.man[i].movies[j].rating)
+                #if (self.man[i].movies[j].rating < 5):
+                #    message += '&#10060;\n'
+                #elif (self.man[i].movies[j].rating < 7):
+                #    message += '&#9888;\n'
+                #elif (self.man[i].movies[j].rating <= 10):
+                #    message += '&#9989;\n'
+                #else:
+                #    message += '\n'
             if (len(self.man[i].movies)!=0):
                 session_api.messages.send(peer_id=man[i].man_id,
                                         message=message,
@@ -387,8 +371,7 @@ while True:
                             if (thRM.ex_country):
                                 message += "&#128204; Исключенные страны: &#128253; " + thRM.ex_country.replace(';',' &#128253; ')+"\n"
                             if (thRM.ex_janre):
-                                message += "&#128204; Исключенные жанры: &#128253; " + thRM.ex_janre.replace(';',
-                                                                                                                ' &#128253; ') + "\n"
+                                message += "&#128204; Исключенные жанры: &#128253; " + thRM.ex_janre.replace(';',' &#128253; ') + "\n"
                             if (thRM.ex_rating):
                                 message += "&#128204; Рейтинг "+thRM.ex_rating_condition+" &#11088; " + str(thRM.ex_rating) + " &#11088;\n"
                             if (thRM.ex_time):
@@ -419,24 +402,6 @@ while True:
 
                 elif event.obj.text.lower() == 'привет':
 
-                    #keybord1 = VkKeyboard()
-                    #keybord = keybord.get_keyboard()
-
-                    #keybord = {
-                    #    "buttons":[],
-                    #    "one_time":True
-                    #}
-                    #keybord = keybord.get_keyboard()
-                    #keybord = keybord.get_empty_keyboard()
-
-                    #session_api.messages.send(peer_id=event.obj.from_id,
-                    #                          message='Скидывай назвние фильма сюда',
-                    #                          random_id=get_random_id(), keybord=keybord1.get_empty_keyboard())
-
-
-
-
-                    #session_api.messages.send(chat_id=event.chat_id, message='Hello', random_id=get_random_id())
                     break
 
                 elif event.obj.text.lower() == '+':
@@ -444,7 +409,7 @@ while True:
                         userinfo = session_api.users.get(user_ids=event.obj.from_id)
                         username = userinfo[0].get('first_name')
 
-                        message = '@id' + str(event.obj.from_id) + ' (' + username + '), уже отписал тебе в лс'
+                        message = '&#10071; @id' + str(event.obj.from_id) + ' (' + username + '), уже отписал тебе в лс &#10071;'
 
 
                         session_api.messages.send(chat_id=event.chat_id, message=message,
@@ -475,14 +440,15 @@ while True:
                                         elif (i == 2):
                                             message += '3&#8419; '
                                         message += movies[i].title + "("+str(movies[i].id)+') '
-                                        if (movies[i].rating<5):
-                                            message += '&#10060;\n'
-                                        elif (movies[i].rating<7):
-                                            message += '&#9888;\n'
-                                        elif (movies[i].rating<=10):
-                                            message += '&#9989;\n'
-                                        else:
-                                            message += '\n'
+                                        message += ratingEmoji(movies[i].rating)
+                                        #if (movies[i].rating<5):
+                                        #    message += '&#10060;\n'
+                                        #elif (movies[i].rating<7):
+                                        #    message += '&#9888;\n'
+                                        #elif (movies[i].rating<=10):
+                                        #    message += '&#9989;\n'
+                                        #else:
+                                        #    message += '\n'
                                     if len(movies)<3:
                                         message += '_____________________________\nЖду еще '+str((3 - len(movies)))+' &#128253;'
                                     else:
@@ -495,8 +461,6 @@ while True:
                                     print('Создал нового персонажа' + str(event.obj.from_id) + str(movies))
                                     break
 
-                                #only.newMan(event.chat_id, event.obj.from_id)
-                                #ChekAlreadyUse(event.obj.from_id)
                             except:
 #
                                 userinfo = session_api.users.get(user_ids = event.obj.from_id)
@@ -512,15 +476,12 @@ while True:
                                 break
 
                 elif event.obj.text.lower() == '!ролл':
-                    #t = threading.Thread(target=Typing, args=(event.chat_id,))
-                    #t.start()
                     if again_moviesroll:
                         filmlist,listfilm = only.roll()
                         if filmlist != '0' and listfilm !='0':
                             session_api.messages.send(chat_id=event.chat_id, message=filmlist,
                                                   random_id=get_random_id())
 
-                        #listfilm += NameToID(behmovie, 0)
 
                             session_api.messages.send(chat_id=event.chat_id, message=listfilm,
                                                   random_id=get_random_id())
@@ -530,9 +491,9 @@ while True:
                             rollMoive.remove(only)
                             break
                     else:
-                        session_api.messages.send(chat_id=event.chat_id, message='&#10071; Для начала необходимо прописать &#128172; [ !фильм ] &#128172; '
-                                                                                 'для того, чтобы запустить сбор фильмов.'
-                                                                            ,
+                        session_api.messages.send(chat_id=event.chat_id,
+                                                  message='&#10071; Для начала необходимо прописать &#128172; [ !фильм ] &#128172; '
+                                                          'для того, чтобы запустить сбор фильмов.',
                                                   random_id=get_random_id())
                         break
                 elif event.obj.text.lower() == '!стоп':
@@ -541,6 +502,11 @@ while True:
                         rollMoive.remove(only)
                         session_api.messages.send(chat_id=event.chat_id,
                                                   message='&#10071; Сбор фильмов остановлен &#10071;',
+                                                  random_id=get_random_id())
+                    else:
+                        session_api.messages.send(chat_id=event.chat_id,
+                                                  message='&#10071; Для начала необходимо прописать &#128172; [ !фильм ] &#128172; '
+                                                          'для того, чтобы запустить сбор фильмов.',
                                                   random_id=get_random_id())
 
                 elif (event.obj.text.lower()[0:10] == '!исключить' or event.obj.text.lower()[0:8]=='!вернуть'):
@@ -612,23 +578,16 @@ while True:
                         only = man[j]
                         from_group = True
 
-                #keybord = None
-
                 if from_group:
 
                     keybord = VkKeyboard(one_time=True)
                     keybord.add_button('+', color=VkKeyboardColor.POSITIVE)
-                    #keybord.add_line()
                     keybord.add_button('-', color=VkKeyboardColor.NEGATIVE)
-                    #keybord.add_line()
-                    #keybord.add_button('Изменить третий', color=VkKeyboardColor.DEFAULT)
                     keybord = keybord.get_keyboard()
 
                     if len(only.movies) < 3:
 
                         if ((event.obj.text == '-') and (only.searchMovie)):
-                            #t = threading.Thread(target=Typing, args=(event.obj.from_id,))
-                            #t.start()
                             behmovie = only.searchMovie
                             only.countFindFilm += 1
                             movie, message = NameToID(behmovie, only.countFindFilm)
@@ -649,13 +608,15 @@ while True:
                                                       message=message,
                                                       random_id=get_random_id(), keyboard=keybord)
                             break
-                            #t.join()
                         elif ((event.obj.text == '+') and (only.searchMovie)):
                             only.countFindFilm = 0
 
                             seconly = searchChat(rollMoive, only.chat_id)[0]
 
                             legetimacy = chekLegitimacy(only.targetMovie,seconly)
+
+                            only.searchMovie = None
+                            only.targetMovie = None
 
                             if (legetimacy):
                                 message = "&#10071; Этот фильм нелегитимен! &#10071;\n&#10071; Причина: "+ legetimacy + ' &#10071;'
@@ -665,16 +626,7 @@ while True:
                                 break
 
                             only.SetMovies()
-                            only.searchMovie = None
-                            only.targetMovie = None
 
-                            #keybord = VkKeyboard(one_time=True)
-                            #keybord.add_button('Изменить первый', color=VkKeyboardColor.PRIMARY)
-                            #keybord.add_line()
-                            #keybord.add_button('Изменить второй', color=VkKeyboardColor.DEFAULT)
-                            #keybord.add_line()
-                            #keybord.add_button('Изменить третий', color=VkKeyboardColor.DEFAULT)
-                            #keybord = keybord.get_keyboard()
 
                             if len(only.movies) < 3:
                                 message = '&#128253; Записал этот фильм, жду следующего &#128253;'
@@ -689,8 +641,6 @@ while True:
 
 
                         else:
-                            #t = threading.Thread(target=Typing, args=(event.obj.from_id,))
-                            #t.start()
                             movie,message = NameToID(event.obj.text, 0)
                             if message != '0':
                                 only.SearchMovies(event.obj.text,movie)
@@ -708,7 +658,6 @@ while True:
                                                       message=message,
                                                       random_id=get_random_id(), keyboard=keybord)
                             break
-                            #t.join()
 
                     else:
                         if event.obj.text.lower()[0:9] == '!заменить':
@@ -726,7 +675,6 @@ while True:
                                                           message=message,
                                                           random_id=get_random_id())
 
-                            #text = event.obj.text[12:len(event.obj.text)]
                         else:
                             message = '&#9745; Твои 3 фильма приняты, ожидай ролла! &#9745;'
                             session_api.messages.send(peer_id=event.obj.from_id,
@@ -736,8 +684,6 @@ while True:
 
 
                 else:
-                    #t = threading.Thread(target=Typing, args=(event.obj.from_id,))
-                    #t.start()
                     if event.obj.text.lower() == 'начать':
                         session_api.messages.send(peer_id=event.obj.from_id,
                                                   message='Привет, я kino-bot. &#9996;\n&#128253; Скинь мне название фильма, и ' 
@@ -761,6 +707,3 @@ while True:
                                               message=message,
                                               random_id=get_random_id())
                         break
-                    #print('не успео')
-                    #boolTuping = False
-                    #t.join()
