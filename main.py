@@ -7,7 +7,7 @@ from vk_api.bot_longpoll import VkBotLongPoll, VkBotEventType
 from vk_api.keyboard import VkKeyboard,VkKeyboardColor
 from db import useDB,useDBForMovies,saveBD,saveToBD,saveToBDset,notifyDB
 from vk_api.utils import get_random_id
-from sm import NameToID,movieToText,getName,getNameByID
+from sm import NameToID,movieToText,getName,getNameByID,ratingEmoji
 import os
 from lordfilm import SearchURLMovies
 
@@ -17,20 +17,12 @@ from lordfilm import SearchURLMovies
 #vk_session.auth()
 
 token = os.environ.get('BOT_TOKEN')
+
 vk_session = vk_api.VkApi(token=token)
 
 session_api = vk_session.get_api()
 longpoll = VkBotLongPoll(vk_session, '181453927')
 
-def ratingEmoji(rating):
-    if (rating < 5):
-        return '&#10060;\n'
-    elif (rating < 7):
-        return '&#9888;\n'
-    elif (rating <= 10):
-        return '&#9989;\n'
-    else:
-        return '\n'
 
 def cheker(one,condition,two):
 
