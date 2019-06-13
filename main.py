@@ -6,7 +6,7 @@ import random
 from vk_api.bot_longpoll import VkBotLongPoll, VkBotEventType
 from vk_api.keyboard import VkKeyboard,VkKeyboardColor
 from datetime import datetime
-from db import useDB,useDBForMovies,saveBD,saveToBD,saveToBDset
+from db import useDB,useDBForMovies,saveBD,saveToBD,saveToBDset,notifyDB
 from vk_api.utils import get_random_id
 from sm import NameToID,movieToText,getName,getNameByID
 import os
@@ -111,6 +111,7 @@ def RemoveRollMovie(i,this, chat_id):
                                                        ' Время сбора фильмов вышло. &#10071;\n'
                                                        '&#9888; &#9888; &#9888;',
                                 random_id=get_random_id())
+        notifyDB(thRM.chat_id, True)
         rollMoive.remove(this)
 
 
@@ -210,6 +211,7 @@ class ChatRoll:
         self.ex_time_condition = "<"
         self.ex_actors = None
         self.ex_country = None
+        self.notify = True
 
     def openBD(self):
         result = useDB(self.chat_id)
@@ -223,6 +225,8 @@ class ChatRoll:
             if (result[0][6]): self.ex_time_condition = result[0][6]
             self.ex_actors = result[0][7]
             self.ex_country = result[0][8]
+            if (result[0][9] is not None):  self.notify = result[0][9]
+            a = 10
 
     def newMan(self, chat_id, man_id):
         self.man.append(Man(chat_id, man_id))
@@ -395,22 +399,22 @@ while True:
                         message += "&#10071; Поставь &#128172; [ + ] &#128172; в чат, если готов смотреть &#10071;"
                         print('Создал новый класс')
                         session_api.messages.send(chat_id=event.chat_id, message=message, random_id=get_random_id())
-
-                        chat_title = session_api.messages.getConversationsById(peer_ids=event.chat_id + 2000000000)
-                        chat_title = chat_title.get('items')[0].get('chat_settings').get('title')
-                        chat_info = session_api.messages.getConversationMembers(peer_id=event.chat_id + 2000000000)
-                        for i in range(len(chat_info.get('profiles'))):
-                            id = chat_info.get('profiles')[i].get('id')
-                            try:
-                                session_api.messages.send(peer_id=id,
-                                                        message= '&#9888; &#9888; &#9888;\n&#128253; '
-                                                                 'В бесседе &#128173; ' + chat_title + ' &#128173; '
-                                                                 'начался сбор фильмов, скорее ставь &#128172; [ + ] &#128172;'
-                                                                 ', чтобы присоединится. &#128253;\n&#9888; &#9888; &#9888;',
-                                                        random_id=get_random_id())
-                            except:
-                                print('Не смог отписать' + str(id))
-
+                        if (thRM.notify):
+                            chat_title = session_api.messages.getConversationsById(peer_ids=event.chat_id + 2000000000)
+                            chat_title = chat_title.get('items')[0].get('chat_settings').get('title')
+                            chat_info = session_api.messages.getConversationMembers(peer_id=event.chat_id + 2000000000)
+                            for i in range(len(chat_info.get('profiles'))):
+                                id = chat_info.get('profiles')[i].get('id')
+                                try:
+                                    session_api.messages.send(peer_id=id,
+                                                            message= '&#9888; &#9888; &#9888;\n&#128253; '
+                                                                    'В бесседе &#128173; ' + chat_title + ' &#128173; '
+                                                                    'начался сбор фильмов, скорее ставь &#128172; [ + ] &#128172;'
+                                                                    ', чтобы присоединится. &#128253;\n&#9888; &#9888; &#9888;',
+                                                            random_id=get_random_id())
+                                except:
+                                    print('Не смог отписать' + str(id))
+                            notifyDB(thRM.chat_id,False)
                         break
 
                 elif event.obj.text.lower() == 'привет':

@@ -1,4 +1,3 @@
-import sqlite3
 import psycopg2
 import os
 
@@ -90,7 +89,8 @@ def useDB(chat_id):
                    'chats.ex_time,'
                    'chats.ex_time_condition,'
                    'chats.ex_actors,'
-                   'chats.ex_country'
+                   'chats.ex_country,'
+                   'chats.notify'
                    ' FROM chats WHERE chat_id=%s', (str(chat_id),))
     result = cursor.fetchall()
     return result
@@ -100,3 +100,16 @@ def useDBForMovies(user_id,chat_id):
     cursor.execute('SELECT users.movies FROM users WHERE chat_id=%s AND user_id=%s', (str(chat_id),str(user_id)) )
     result = cursor.fetchall()
     return result
+
+
+def notifyDB(chat_id,notify):
+    cursor = conn.cursor()
+    cursor.execute('SELECT notify FROM chats WHERE chat_id=%s',(str(chat_id)))
+    result = cursor.fetchall()
+    if (result):
+        cursor.execute("UPDATE chats SET notify = %s WHERE chat_id=%s",
+                       (str(notify), str(chat_id)))
+    else:
+        cursor.execute('INSERT INTO chats(chat_id,notify) VALUES(%s,%s)',
+                       (str(chat_id),str(notify)))
+        conn.commit()
