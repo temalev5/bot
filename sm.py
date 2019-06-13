@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from kinopoisk.movie import Movie
-from main import ratingEmoji
+#from main import ratingEmoji
 
 
 def getName(name, pos):
@@ -59,7 +59,7 @@ def movieToText(name):
 
         nametoid += 'Рейтинг: ' + str(name.rating)
 
-        nametoid += ratingEmoji(name.rating)
+        #nametoid += ratingEmoji(name.rating)
         #if name.rating != None:
 
         #    if name.rating < 5.5:
