@@ -17,7 +17,6 @@ from lordfilm import SearchURLMovies
 #vk_session.auth()
 
 token = os.environ.get('BOT_TOKEN')
-
 vk_session = vk_api.VkApi(token=token)
 
 session_api = vk_session.get_api()
@@ -607,17 +606,18 @@ while True:
 
                             legetimacy = chekLegitimacy(only.targetMovie,seconly)
 
-                            only.searchMovie = None
-                            only.targetMovie = None
-
                             if (legetimacy):
                                 message = "&#10071; Этот фильм нелегитимен! &#10071;\n&#10071; Причина: "+ legetimacy + ' &#10071;'
                                 session_api.messages.send(peer_id=event.obj.from_id,
                                                           message=message,
                                                           random_id=get_random_id())
+                                only.searchMovie = None
+                                only.targetMovie = None
                                 break
 
                             only.SetMovies()
+                            only.searchMovie = None
+                            only.targetMovie = None
 
 
                             if len(only.movies) < 3:
