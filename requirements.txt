@@ -1,4 +1,4 @@
 vk-api
 psycopg2
 pip
---upgrade git+https://github.com/temalev5/kinopoiskpybot.git --force-reinstall
+install --upgrade git+https://github.com/temalev5/kinopoiskpybot.git --force-reinstall
