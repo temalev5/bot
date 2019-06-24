@@ -11,7 +11,6 @@ from sm import NameToID,movieToText,getName,getNameByID,ratingEmoji
 import os
 from lordfilm import SearchURLMovies
 
-print('HELLO')
 #login, password = "login", "password"
 #vk_session = vk_api.VkApi(login, password)
 #vk_session.auth()
