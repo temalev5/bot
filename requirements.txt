@@ -1,3 +1,2 @@
 vk-api
 psycopg2
-git+https://github.com/temalev5/kinopoiskpybot.git
