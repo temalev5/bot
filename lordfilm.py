@@ -21,4 +21,19 @@ def SearchURLMovies(name):
 
     response = requests.post('http://lordfilms.tv/engine/mod_punpun/dle_search/ajax/dle_search.php', headers = HEADERS, data = DATA)
     content = response.content.decode('utf-8')
-    return content[content.find('http'):content.find('html') + 4]
+    staticcontent = content = content[content.find('http'):content.find('html') + 4]
+    response = requests.get(content,headers=HEADERS)
+    if (response.status_code != 200):
+        return staticcontent
+    content = response.content.decode('utf-8')
+    ref = '&ref=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJyZWZfaG9zdCI6ImxvcmRmaWxtcy50diIsInJlcV9ob3N0Ijoic3RyZWFtdG9qdXBpdGVyLm1lIiwiZXhwIjoxNTYxNzI3OTExLCJ0b2tlbiI6ImIxNzYwMDExMTlhYzRhMTgifQ.m9mrXEC9ojXX7cVR5Byedbea2h7-ELkC1vTw01bx3sI'
+    start = '<iframe src='
+    while content.find(start)>-1:
+        content = content[content.find(start)+len(start):]
+        newcontent = content[:content.find('>')]
+        if newcontent.find('width="610"')>-1:
+            content = newcontent
+            content = content[content.find('"')+1:]
+            content = content[:content.find('"')]+ref
+            return content
+    return staticcontent
