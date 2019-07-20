@@ -109,4 +109,4 @@ def notifyDB(chat_id,notify):
     else:
         cursor.execute('INSERT INTO chats(chat_id,notify) VALUES(%s,%s)',
                        (str(chat_id),str(notify)))
-        conn.commit()
+    conn.commit()
