@@ -101,7 +101,7 @@ def searchChat(rollMoive,id):
         searchChat(rollMoive,id)
 
 def RemoveRollMovie(i,this, chat_id):
-    time.sleep(60)
+    time.sleep(1800)
     notifyDB(chat_id, True)
     if (rollMoive.count(this)>0):
         this.SendFilmsToAll()
