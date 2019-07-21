@@ -11,6 +11,7 @@ from sm import NameToID,movieToText,getName,getNameByID,ratingEmoji
 import os
 from lordfilm import SearchURLMovies
 
+
 #login, password = "login", "password"
 #vk_session = vk_api.VkApi(login, password)
 #vk_session.auth()
@@ -26,16 +27,16 @@ def cheker(one,condition,two):
 
     if ((one) and (two)):
         if (condition == ">"):
-            if (one > two):
-                return "Нелегитимный"
-        if (condition == ">="):
             if (one >= two):
                 return "Нелегитимный"
+        if (condition == ">="):
+            if (one > two):
+                return "Нелегитимный"
         if (condition == "<"):
-            if (one < two):
+            if (one <= two):
                 return "Нелегитимный"
         if (condition == "<="):
-            if (one <= two):
+            if (one < two):
                 return "Нелегитимный"
         if (condition == "="):
             if (one != two):
@@ -100,7 +101,8 @@ def searchChat(rollMoive,id):
         searchChat(rollMoive,id)
 
 def RemoveRollMovie(i,this, chat_id):
-    time.sleep(1800)
+    time.sleep(60)
+    notifyDB(chat_id, True)
     if (rollMoive.count(this)>0):
         this.SendFilmsToAll()
         session_api.messages.send(chat_id=chat_id, message='&#9888; &#9888; &#9888;\n&#10071;'
@@ -108,7 +110,6 @@ def RemoveRollMovie(i,this, chat_id):
                                                        ' Время сбора фильмов вышло. &#10071;\n'
                                                        '&#9888; &#9888; &#9888;',
                                 random_id=get_random_id())
-        notifyDB(thRM.chat_id, True)
         rollMoive.remove(this)
 
 
@@ -218,12 +219,7 @@ class ChatRoll:
         for i in range(len(self.man)):
             message = 'Список фильмов: \n'
             for j in range(len(self.man[i].movies)):
-                if (j == 0):
-                    message += '1&#8419; '
-                elif (j == 1):
-                    message += '2&#8419; '
-                elif (j == 2):
-                    message += '3&#8419; '
+                message += str(j+1)+'&#8419; '
                 message += self.man[i].movies[j].title + "(" + str(self.man[i].movies[j].id) + ') '
                 message += ratingEmoji(self.man[i].movies[j].rating)
                 #if (self.man[i].movies[j].rating < 5):
@@ -355,7 +351,7 @@ while True:
                         threading.Thread(target=RemoveRollMovie, args=(0,thRM, event.chat_id),daemon=True).start()
                         message = "&#9888; Начался сбор фильмов &#9888;\n"
                         if ((thRM.ex_actors) or (thRM.ex_country) or (thRM.ex_janre) or (thRM.ex_rating) or (thRM.ex_time) or (thRM.ex_year)):
-                            message += "&#10071; Параметры сбора :\n_______________________________\n"
+                            message += "&#10071; Установленные параметры :\n_______________________________\n"
                             if (thRM.ex_actors):
                                 message += "&#128204; Исключенные актеры: &#128253; "+thRM.ex_actors.replace(';',' &#128253; ')+"\n"
                             if (thRM.ex_country):
@@ -423,12 +419,7 @@ while True:
                                 elif len(movies) <= 3:
                                     message = 'Принял от тебя :\n'
                                     for i in range(len(movies)):
-                                        if (i == 0):
-                                            message += '1&#8419; '
-                                        elif (i == 1):
-                                            message += '2&#8419; '
-                                        elif (i == 2):
-                                            message += '3&#8419; '
+                                        message += str(i+1)+'&#8419; '
                                         message += movies[i].title + "("+str(movies[i].id)+') '
                                         message += ratingEmoji(movies[i].rating)
                                         #if (movies[i].rating<5):
