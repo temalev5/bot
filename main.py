@@ -122,7 +122,15 @@ def ChekAlreadyUse(man_id, chat_id):
         movies.remove("")
         if (len(movies)<=3):
             for i in range(len(movies)):
-                movie.append(getNameByID(movies[i][movies[i].find("(") + 1:movies[i].find(")")]))
+                try:
+                    #id = None
+                    #trying = 0
+                    #while (type(id) != int) and (trying != 3):
+                    #    trying += 1
+                    #    print("Hello")
+                    movie.append(getNameByID(movies[i][movies[i].find("(") + 1:movies[i].find(")")]))
+                except:
+                    print("Не удалось добавить фильм "+movies[i])
             if len(movie) > 3:
                 movie = movie[0:3]
             return movie
