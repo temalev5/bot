@@ -26,7 +26,7 @@ def getNameByID(id):
     try:
         movie.genres.remove('... слова')
     except:
-        print('hello')
+        pass
     return movie
 
 
@@ -101,7 +101,7 @@ def NameToID(name, pos):
             try:
                 movie_list[pos].genres.remove('... слова')
             except:
-                print('')
+                pass
 
             nametoid = movieToText(movie_list[pos])
 

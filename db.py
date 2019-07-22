@@ -4,7 +4,8 @@ import os
 DATABASE_URL = os.environ['DATABASE_URL']
 conn = psycopg2.connect(DATABASE_URL, sslmode='require')
 
-def saveToBDset(chat_id,name,condition,value):
+
+def saveToBDset(chat_id, name, condition, value):
     cursor = conn.cursor()
     value_condition=condition
     if (name=="рейтинг"):
@@ -30,7 +31,7 @@ def saveToBDset(chat_id,name,condition,value):
     conn.commit()
 
 
-def saveToBD(chat_id,name,value,t):
+def saveToBD(chat_id, name, value, t):
     cursor = conn.cursor()
     if (name == "актера"): name = "ex_actors"
     if (name == "жанр"): name = "ex_janre"
@@ -58,6 +59,7 @@ def saveToBD(chat_id,name,value,t):
         cursor.execute('INSERT INTO chats(chat_id,'+name+') VALUES(%s,%s)',
                        (str(chat_id),str(value.lower())))
     conn.commit()
+
 
 def saveBD(chat):
     cursor = conn.cursor()
@@ -92,9 +94,13 @@ def useDB(chat_id):
     result = cursor.fetchall()
     return result
 
-def useDBForMovies(user_id,chat_id):
+
+def useDBForMovies(user_id, chat_id):
     cursor = conn.cursor()
-    cursor.execute('SELECT users.movies FROM users WHERE chat_id=%s AND user_id=%s', (str(chat_id),str(user_id)) )
+    if (chat_id):
+        cursor.execute('SELECT users.movies FROM users WHERE chat_id=%s AND user_id=%s', (str(chat_id), str(user_id)))
+    else:
+        cursor.execute('SELECT users.movies,users.chat_id FROM users WHERE user_id=%s', (str(user_id),))
     result = cursor.fetchall()
     return result
 
@@ -110,3 +116,5 @@ def notifyDB(chat_id,notify):
         cursor.execute('INSERT INTO chats(chat_id,notify) VALUES(%s,%s)',
                        (str(chat_id),str(notify)))
     conn.commit()
+
+

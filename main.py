@@ -8,6 +8,7 @@ from vk_api.keyboard import VkKeyboard,VkKeyboardColor
 from db import useDB,useDBForMovies,saveBD,saveToBD,saveToBDset,notifyDB
 from vk_api.utils import get_random_id
 from sm import NameToID,movieToText,getName,getNameByID,ratingEmoji
+import traceback
 import os
 from lordfilm import SearchURLMovies
 
@@ -123,11 +124,6 @@ def ChekAlreadyUse(man_id, chat_id):
         if (len(movies)<=3):
             for i in range(len(movies)):
                 try:
-                    #id = None
-                    #trying = 0
-                    #while (type(id) != int) and (trying != 3):
-                    #    trying += 1
-                    #    print("Hello")
                     movie.append(getNameByID(movies[i][movies[i].find("(") + 1:movies[i].find(")")]))
                 except:
                     print("Не удалось добавить фильм "+movies[i])
@@ -277,7 +273,7 @@ class ChatRoll:
             try:
                 man[i].movies.remove(removiemovie)
             except:
-                print()
+                pass
 
 
         return filmlist, retlistfiml
@@ -311,7 +307,7 @@ while True:
                                                 random_id=get_random_id())
                         break
                 except:
-                    print('')
+                    pass
 
 
                 if event.obj.text.lower() == '!команды':
@@ -345,7 +341,7 @@ while True:
                         if man[j].man_id == event.obj.from_id:
                             again_plus = True
                 except:
-                    print('')
+                    pass
 
                 if event.obj.text.lower() == '!фильм':
                     if again_moviesroll:
@@ -430,28 +426,20 @@ while True:
                                         message += str(i+1)+'&#8419; '
                                         message += movies[i].title + "("+str(movies[i].id)+') '
                                         message += ratingEmoji(movies[i].rating)
-                                        #if (movies[i].rating<5):
-                                        #    message += '&#10060;\n'
-                                        #elif (movies[i].rating<7):
-                                        #    message += '&#9888;\n'
-                                        #elif (movies[i].rating<=10):
-                                        #    message += '&#9989;\n'
-                                        #else:
-                                        #    message += '\n'
                                     if len(movies)<3:
                                         message += '_____________________________\nЖду еще '+str((3 - len(movies)))+' &#128253;'
                                     else:
-                                        message += '_____________________________\n&#9745; Принял от тебя все 3 фильма. &#9745;\n&#128253;&#128253;&#128253;\n' \
-                                                                        '&#10071; Тебе доступна команда &#128172; [ !заменить <номер фильма> ] &#128172;'
+                                        message += '\n&#9745; Принял от тебя все 3 фильма. &#9745;\n&#128253;&#128253;&#128253;\n' \
+                                                   '&#10071; Тебе доступна команда &#10071;\n&#128172; [ !заменить <(название,ID,номер фильма> ] &#128172;\n' \
+                                                   '&#128172; [ !список ] &#128172;'
                                     session_api.messages.send(peer_id=event.obj.from_id,
                                                               message=message,
                                                               random_id=get_random_id())
                                     only.newManm(event.chat_id, event.obj.from_id, movies)
                                     print('Создал нового персонажа' + str(event.obj.from_id) + str(movies))
                                     break
-
                             except:
-#
+                                traceback.print_exc()
                                 userinfo = session_api.users.get(user_ids = event.obj.from_id)
                                 username = userinfo[0].get('first_name')
 
@@ -574,6 +562,67 @@ while True:
                     keybord.add_button('-', color=VkKeyboardColor.NEGATIVE)
                     keybord = keybord.get_keyboard()
 
+                    if event.obj.text.lower()[0:9] == '!заменить':
+                        removie = None
+                        try:
+                            num = int(event.obj.text[10:])
+                            if num < 1: break
+                            if num < 4:
+                                try:
+                                    removie = only.movies.pop(num - 1)
+                                except:
+                                    pass
+                            else:
+                                for i in range(len(only.movies)):
+                                    if only.movies[i].id == num:
+                                        removie = only.movies.pop(i)
+                                        break
+                        except:
+                            num = event.obj.text[10:]
+                            for i in range(len(only.movies)):
+                                if only.movies[i].title.lower() == num.lower():
+                                    removie = only.movies.pop(i)
+                                    break
+                        if removie:
+                            message = 'Фильм &#128253; ' + removie.title + ' &#128253; был удален\n_____________________________\n'
+                            message += 'Текущий список фильмов :\n'
+                            for i in range(len(movies)):
+                                message += str(i + 1) + '&#8419; '
+                                message += movies[i].title + "(" + str(movies[i].id) + ') '
+                                message += ratingEmoji(movies[i].rating)
+                            message += '_____________________________\nЖду от тебя фильма на замену.'
+                        else:
+                            message = '&#10071; Не удалось удалить фильм &#10071;'
+                        session_api.messages.send(peer_id=event.obj.from_id,
+                                                  message=message,
+                                                  random_id=get_random_id())
+                        break
+                    # except:
+                    #     break
+                    # if num > 3 or num < 1 or len(only.movies)<num:
+                    #     break
+                    # else:
+                    #     removie = only.Removie(num)
+                    #     message = 'Фильм &#128253; ' + removie.title + ' &#128253; был удален\n' \
+                    #                                              'Жду от тебя фильма на замену.'
+                    #     session_api.messages.send(peer_id=event.obj.from_id,
+                    #                               message=message,
+                    #                               random_id=get_random_id())
+
+                    elif event.obj.text.lower() == "!список":
+                        movies = only.movies
+                        message = 'Текущий список фильмов :\n'
+                        for i in range(len(movies)):
+                            message += str(i + 1) + '&#8419; '
+                            message += movies[i].title + "(" + str(movies[i].id) + ') '
+                            message += ratingEmoji(movies[i].rating)
+                        session_api.messages.send(peer_id=event.obj.from_id,
+                                                  message=message,
+                                                  random_id=get_random_id())
+                        break
+
+
+
                     if len(only.movies) < 3:
 
                         if ((event.obj.text == '-') and (only.searchMovie)):
@@ -622,13 +671,12 @@ while True:
                                 message = '&#128253; Записал этот фильм, жду следующего &#128253;'
                             else:
                                 message = '&#9745; Принял от тебя все 3 фильма. &#9745;\n&#128253;&#128253;&#128253;\n' \
-                                          '&#10071; Тебе доступна команда &#128172; [ !заменить <номер фильма> ] &#128172;'
-
+                                           '&#10071; Тебе доступны команды &#10071;\n&#128172; [ !заменить <(название,ID,номер фильма> ] &#128172;\n' \
+                                          '&#128172; [ !список ] &#128172;'
                             session_api.messages.send(peer_id=event.obj.from_id,
                                                       message=message,
                                                       random_id=get_random_id())
                             break
-
 
                         else:
                             movie,message = NameToID(event.obj.text, 0)
@@ -650,27 +698,11 @@ while True:
                             break
 
                     else:
-                        if event.obj.text.lower()[0:9] == '!заменить':
-                            try:
-                                num = int(event.obj.text[10])
-                            except:
-                                break
-                            if num > 3 or num < 1 or len(only.movies)<num:
-                                break
-                            else:
-                                removie = only.Removie(num)
-                                message = 'Фильм &#128253; ' + removie.title + ' &#128253; был удален\n' \
-                                                                         'Жду от тебя фильма на замену.'
-                                session_api.messages.send(peer_id=event.obj.from_id,
-                                                          message=message,
-                                                          random_id=get_random_id())
-
-                        else:
-                            message = '&#9745; Твои 3 фильма приняты, ожидай ролла! &#9745;'
-                            session_api.messages.send(peer_id=event.obj.from_id,
+                        message = '&#9745; Твои 3 фильма приняты, ожидай ролла! &#9745;'
+                        session_api.messages.send(peer_id=event.obj.from_id,
                                                 message=message,
                                                 random_id=get_random_id())
-                            break
+                        break
 
 
                 else:
@@ -680,8 +712,53 @@ while True:
                                                           'я напишу тебе информацию о нем. &#128253;',
                                                   random_id=get_random_id())
                         break
+                    # elif event.obj.text.lower()[0:9] == '!заменить':
+                    #
+                    #     movies=useDBForMovies(event.obj.from_id,None)
+                    #     if (movies):
+                    #         removie = None
+                    #         try:
+                    #             num = int(event.obj.text[10:])
+                    #             if num < 1: break #############
+                    #             if num < 4:
+                    #                 #if len(movies)>1: break ###############
+                    #                 try:
+                    #                     str = movies[0][0]
+                    #                     movienew = ""
+                    #                     for i in range (movies[0][0].count(';')):
+                    #                         if i != (num-1):
+                    #                             movienew += str[:str.find(';')+1]
+                    #                         else:
+                    #                             delmovie = str[:str.find(';')+1]
+                    #                         str = str[str.find(';')+1:]
+                    #                     a=10
+                    #                 except:
+                    #                     pass
+                    #             else:
+                    #                 a = 10
+                    #                 #for i in range(len(only.movies)):
+                    #                     #if only.movies[i].id == num:
+                    #                         #removie = only.movies.pop(i)
+                    #                         #break
+                    #         except:
+                    #             num = event.obj.text[10:]
+                    #             #for i in range(len(only.movies)):
+                    #                 #if only.movies[i].title.lower() == num.lower():
+                    #                     #removie = only.movies.pop(i)
+                    #             break
+                    #         if removie:
+                    #             message = 'Фильм &#128253; ' + removie.title + ' &#128253; был удален\n' \
+                    #                                                            'Жду от тебя фильма на замену.'
+                    #         else:
+                    #             message = '&#10071; Не удалось удалить фильм &#10071;'
+                    #         session_api.messages.send(peer_id=event.obj.from_id,
+                    #                                   message=message,
+                    #                                   random_id=get_random_id())
+                    #     else:
+                    #         break
 
-                    if event.obj.text != '+' and event.obj.text != '-':
+
+                    elif (event.obj.text != '+' and event.obj.text != '-'):
                         movie,message = NameToID(event.obj.text, 0)
                         if message == '0':
                             session_api.messages.send(peer_id=event.obj.from_id,
