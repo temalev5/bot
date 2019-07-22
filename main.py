@@ -98,7 +98,7 @@ def search_man():
     man = []
     try:
         for i in range(len(roll_movie)):
-            man = roll_movie[i].get_man()
+            man = roll_movie[i].man
         return man
     except:
         search_man()
@@ -170,7 +170,6 @@ class Man:
         self.countFindFilm = 0
         self.targetMovie = None
 
-
     def search_movies(self, mov, movie):
         self.searchMovie = get_name(mov, self.countFindFilm)
         self.targetMovie = movie
@@ -222,24 +221,10 @@ class ChatRoll:
         self.man[len(self.man) - 1].movies = movies
         print('Создал нового персонажа ' + str(man_id) + str(movies))
 
-    def get_man(self):
-        return self.man
 
     def send_films_to_all(self):
         for i in range(len(self.man)):
-            message = 'Список фильмов: \n'
-            for j in range(len(self.man[i].movies)):
-                message += str(j + 1) + '&#8419; '
-                message += self.man[i].movies[j].title + "(" + str(self.man[i].movies[j].id) + ') '
-                message += rating_emoji(self.man[i].movies[j].rating)
-                # if (self.man[i].movies[j].rating < 5):
-                #    message += '&#10060;\n'
-                # elif (self.man[i].movies[j].rating < 7):
-                #    message += '&#9888;\n'
-                # elif (self.man[i].movies[j].rating <= 10):
-                #    message += '&#9989;\n'
-                # else:
-                #    message += '\n'
+            message = 'Список фильмов: \n' + list_of_films(self.man[i].movies)
             if len(self.man[i].movies) != 0:
                 session_api.messages.send(peer_id=self.man[i].man_id,
                                           message=message,
@@ -259,9 +244,14 @@ class ChatRoll:
                         '&#128293;&#128293;&#128293;\n '
         list_film = []
         for i in range(len(self.man)):
-            film_list += '***********************\n* ' + get_username(self.man[i].man_id) + ' *\n'
-            if len(self.man[i].movies) < 3:
-                return '0', '0'
+            username = get_username(self.man[i].man_id)
+            film_list += '***********************\n* ' + username + ' *\n'
+            if len(self.man[i].movies) < 2:
+                return '0', '&#10071; @id' + str(self.man[i].man_id) + ' (' + username + ') ' \
+                            'скинул мне всего лишь 1 фильм &#10071;'
+            elif len(self.man[i].movies) < 3:
+                return '0', '&#10071; @id' + str(self.man[i].man_id) + ' (' + username + ') ' \
+                            'должен скинуть мне еще 1 фильм &#10071;'
             elif len(self.man[i].movies) == 3:
                 for j in range(len(self.man[i].movies)):
                     film_list += self.man[i].movies[j].title + '\n'
@@ -363,8 +353,8 @@ def ready_to_film(event, again_movies_roll, again_plus, only):
                     if len(movies) < 3:
                         message += '_____________________________\nЖду еще ' + str((3 - len(movies))) + ' &#128253;'
                     else:
-                        message += '\n&#9745; Принял от тебя все 3 фильма. &#9745;\n&#128253;&#128253;&#128253;\n' \
-                                   '&#10071; Тебе доступна команда &#10071;\n&#128172; [ !заменить ' \
+                        message += '_____________________________\n&#9745; Принял от тебя все 3 фильма. &#9745;\n&#128253;&#128253;&#128253;\n' \
+                                   '&#10071; Тебе доступны команды &#10071;\n&#128172; [ !заменить ' \
                                    '<(название,ID,номер фильма> ] &#128172;\n' \
                                    '&#128172; [ !список ] &#128172;'
                     session_api.messages.send(peer_id=event.obj.from_id,
@@ -398,6 +388,10 @@ def chat_roll(event, again_movies_roll, only):
 
             only.send_films_to_all()
             roll_movie.remove(only)
+            return
+        else:
+            session_api.messages.send(chat_id=event.chat_id, message=list_film,
+                                      random_id=get_random_id())
             return
     else:
         session_api.messages.send(chat_id=event.chat_id,
@@ -503,11 +497,7 @@ def replace(event, only):
                 break
     if remove:
         message = 'Фильм &#128253; ' + remove.title + ' &#128253; был удален\n_____________________________\n'
-        message += 'Текущий список фильмов :\n'
-        for i in range(len(only.movies)):
-            message += str(i + 1) + '&#8419; '
-            message += only.movies[i].title + "(" + str(only.movies[i].id) + ') '
-            message += rating_emoji(only.movies[i].rating)
+        message += 'Текущий список фильмов :\n' + list_of_films(only.movies)
         message += '_____________________________\nЖду от тебя фильма на замену.'
     else:
         message = '&#10071; Не удалось удалить фильм &#10071;'
