@@ -66,27 +66,26 @@ def save_to_db(chat_id, name, value, t):
     conn.commit()
 
 
-def save_db(chat):
-    cursor = conn.cursor()
-    for i in range(len(chat.man)):
-        movies = ""
-        cursor.execute('SELECT users.movies FROM users WHERE chat_id=%s AND user_id=%s', (str(chat.chat_id),
-                                                                                          str(chat.man[i].man_id)
+def save_movies_to_db(chat_id, man_id, movies):
+    try:
+        cursor = conn.cursor()
+        cursor.execute('SELECT users.movies FROM users WHERE chat_id=%s AND user_id=%s', (str(chat_id),
+                                                                                          str(man_id)
                                                                                           ))
         result = cursor.fetchall()
-        for j in range(len(chat.man[i].movies)):
-            movies += chat.man[i].movies[j].title + "(" + str(chat.man[i].movies[j].id) + ")" + ";"
-        if movies != "":
-            if result:
-                cursor.execute("UPDATE users SET movies = %s WHERE chat_id=%s AND user_id=%s", (str(movies),
-                                                                                                str(chat.chat_id),
-                                                                                                str(chat.man[i].man_id),
-                                                                                                ))
-            else:
-                cursor.execute('INSERT INTO users(user_id,chat_id,movies) VALUES(%s,%s,%s)', (str(chat.man[i].man_id),
-                                                                                              str(chat.chat_id),
-                                                                                              str(movies)))
-            conn.commit()
+        if result:
+            cursor.execute("UPDATE users SET movies = %s WHERE chat_id=%s AND user_id=%s", (str(movies),
+                                                                                            str(chat_id),
+                                                                                            str(man_id),
+                                                                                            ))
+        else:
+            cursor.execute('INSERT INTO users(user_id,chat_id,movies) VALUES(%s,%s,%s)', (str(man_id),
+                                                                                          str(chat_id),
+                                                                                          str(movies)))
+        conn.commit()
+        return True
+    except:
+        return False
 
 
 def use_db(chat_id):

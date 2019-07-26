@@ -4,22 +4,15 @@ from kinopoisk.movie import Movie
 
 
 def rating_emoji(rating):
-    if rating < 5:
-        return '&#10060;\n'
-    elif rating < 7:
-        return '&#9888;\n'
-    elif rating <= 10:
-        return '&#9989;\n'
+    if rating:
+        if rating < 5:
+            return '&#10060;'
+        elif rating < 7:
+            return '&#9888;'
+        elif rating <= 10:
+            return '&#9989;'
     else:
-        return '\n'
-
-
-def get_name(name, pos):
-    movie_list = Movie.objects.search(name)
-    if (len(movie_list) == 0) or (pos >= len(movie_list)):
-        return '0'
-    else:
-        return movie_list[pos].title
+        return ''
 
 
 def get_name_by_id(movie_id):
@@ -70,7 +63,7 @@ def movie_to_text(name):
 
         name_to_id += 'Рейтинг: ' + str(name.rating)
 
-        name_to_id += rating_emoji(name.rating)
+        name_to_id += rating_emoji(name.rating) + '\n'
         #if name.rating != None:
 
         #    if name.rating < 5.5:

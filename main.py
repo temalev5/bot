@@ -5,9 +5,9 @@ import vk_api
 import random
 from vk_api.bot_longpoll import VkBotLongPoll, VkBotEventType
 from vk_api.keyboard import VkKeyboard, VkKeyboardColor
-from db import use_db, use_db_for_movies, save_db, save_to_db, save_to_db_set, notify_db
+from db import use_db, use_db_for_movies, save_to_db, save_to_db_set, notify_db, save_movies_to_db
 from vk_api.utils import get_random_id
-from sm import name_to_id, movie_to_text, get_name, get_name_by_id, rating_emoji
+from sm import name_to_id, movie_to_text, get_name_by_id, rating_emoji
 import traceback
 import os
 from lordfilm import search_url_movies
@@ -23,12 +23,21 @@ session_api = vk_session.get_api()
 long_poll = VkBotLongPoll(vk_session, '181453927')
 
 
+def get_movie_name(movie):
+    return movie[:movie.find('(')]
+
+
+def get_id(movie):
+    return movie[movie.find('(') + 1:movie.find(')')]
+
+
 def list_of_films(movies):
     message = ''
     for i in range(len(movies)):
         message += str(i + 1) + '&#8419; '
-        message += movies[i].title + "(" + str(movies[i].id) + ') '
-        message += rating_emoji(movies[i].rating)
+        message += movies[i][:movies[i].find(')') + 1] + ' ' \
+                   + movies[i][movies[i].find('[') + 1:movies[i].find(']')] \
+                   + ';' + '\n'
     return message
 
 
@@ -60,7 +69,7 @@ def checker(one, condition, two):
 def check_legitimacy(movie, chat):
     for i in range(len(chat.man)):
         for j in range(len(chat.man[i].movies)):
-            if chat.man[i].movies[j].id == movie.id:
+            if int(get_id(chat.man[i].movies[j])) == movie.id:
                 return "Повторяющийся фильм"
 
     if chat.ex_actors:
@@ -118,7 +127,7 @@ def search_chat(chat_id):
         search_chat(chat_id)
 
 
-def remove_roll_movie(i, this, chat_id):
+def remove_roll_movie(this, chat_id):
     time.sleep(1800)
     notify_db(chat_id, True)
     if roll_movie.count(this) > 0:
@@ -137,16 +146,7 @@ def check_already_use(man_id, chat_id):
     if movies:
         movies = movies[0][0]
         movies = movies.split(';')
-        movies.remove("")
-        if len(movies) <= 3:
-            for i in range(len(movies)):
-                try:
-                    movie.append(get_name_by_id(movies[i][movies[i].find("(") + 1:movies[i].find(")")]))
-                except:
-                    print("Не удалось добавить фильм " + movies[i])
-            if len(movie) > 3:
-                movie = movie[0:3]
-            return movie
+        return movies
     else:
         return movie
 
@@ -172,11 +172,12 @@ class Man:
         self.targetMovie = None
 
     def search_movies(self, mov, movie):
-        self.searchMovie = get_name(mov, self.countFindFilm)
+        self.searchMovie = mov
         self.targetMovie = movie
 
     def set_movies(self):
-        self.movies.append(self.targetMovie)
+        self.movies.append(self.targetMovie.title + "(" + str(self.targetMovie.id) + ")" + "[" +
+                           rating_emoji(self.targetMovie.rating)[:-1] + "]")
 
 
 class ChatRoll:
@@ -222,15 +223,20 @@ class ChatRoll:
         self.man[len(self.man) - 1].movies = movies
         print('Создал нового персонажа ' + str(man_id) + str(movies))
 
-
     def send_films_to_all(self):
         for i in range(len(self.man)):
-            message = 'Список фильмов: \n' + list_of_films(self.man[i].movies)
             if len(self.man[i].movies) != 0:
-                session_api.messages.send(peer_id=self.man[i].man_id,
-                                          message=message,
-                                          random_id=get_random_id())
-        save_db(self)
+                result = save_movies_to_db(self.chat_id, self.man[i].man_id, ";".join(self.man[i].movies))
+                if result:
+                    message = 'Список фильмов: \n' + list_of_films(self.man[i].movies)
+                    session_api.messages.send(peer_id=self.man[i].man_id,
+                                              message=message,
+                                              random_id=get_random_id())
+                else:
+                    message = '&#10071; Не удалось сохранить фильмы в БД &#10071;'
+                    session_api.messages.send(peer_id=self.man[i].man_id,
+                                              message=message,
+                                              random_id=get_random_id())
 
     def roll(self):
         for i in range(len(self.man)):
@@ -243,7 +249,6 @@ class ChatRoll:
         ret_list_film = 'СЛУЧАЙНЫЙ ФИЛЬМ:\n&#128293;&#128293;&#128293;&#128293;&#128293;&#128293;&#128293;&#128293;' \
                         '&#128293;&#128293;&#128293;&#128293;&#128293;&#128293;&#128293;&#128293;&#128293;' \
                         '&#128293;&#128293;&#128293;\n '
-        list_film = []
         for i in range(len(self.man)):
             username = get_username(self.man[i].man_id)
             film_list += '***********************\n* ' + username + ' *\n'
@@ -254,23 +259,17 @@ class ChatRoll:
                 return '0', '&#10071; @id' + str(self.man[i].man_id) + ' (' + username + ') ' \
                             'должен скинуть мне еще 1 фильм &#10071;'
             elif len(self.man[i].movies) == 3:
-                for j in range(len(self.man[i].movies)):
-                    film_list += self.man[i].movies[j].title + '\n'
-                    list_film.append(self.man[i].movies[j])
+                film_list += list_of_films(self.man[i].movies)
         film_list += '***********************\n_______________________________________________________________\n'
-        rnd = random.randint(0, len(list_film) - 1)
-        remove_movie = list_film[rnd]
-        ret_list_film += movie_to_text(remove_movie)
+        ft_rnd = random.randint(0, len(self.man) - 1)
+        sec_rnd = random.randint(0, len(self.man[ft_rnd].movies) - 1)
+        remove_movie = self.man[ft_rnd].movies.pop(sec_rnd)
 
-        url = search_url_movies(remove_movie.title)
+        ret_list_film += movie_to_text(get_name_by_id(int(get_id(remove_movie))))
+
+        url = search_url_movies(get_movie_name(remove_movie))
 
         ret_list_film += '\n&#9889;' + url + ' &#9889;'
-
-        for i in range(len(self.man)):
-            try:
-                self.man[i].movies.remove(remove_movie)
-            except:
-                pass
 
         return film_list, ret_list_film
 
@@ -284,16 +283,16 @@ def film(event, again_movies_roll):
         roll_movie.append(ChatRoll(event))
         th_rm = roll_movie[len(roll_movie) - 1]
         th_rm.open_db()
-        threading.Thread(target=remove_roll_movie, args=(0, th_rm, event.chat_id), daemon=True).start()
+        threading.Thread(target=remove_roll_movie, args=(th_rm, event.chat_id,), daemon=True).start()
         message = "&#9888; Начался сбор фильмов &#9888;\n"
         if th_rm.ex_actors or th_rm.ex_country or th_rm.ex_genre or th_rm.ex_rating or th_rm.ex_time or th_rm.ex_year:
             message += "&#10071; Установленные параметры :\n_______________________________\n"
             if th_rm.ex_actors:
                 message += "&#128204; Исключенные актеры: &#128253; " + th_rm.ex_actors.replace(';',
-                                                                                               ' &#128253; ') + "\n"
+                                                                                                ' &#128253; ') + "\n"
             if th_rm.ex_country:
                 message += "&#128204; Исключенные страны: &#128253; " + th_rm.ex_country.replace(';',
-                                                                                                ' &#128253; ') + "\n"
+                                                                                                 ' &#128253; ') + "\n"
             if th_rm.ex_genre:
                 message += "&#128204; Исключенные жанры: &#128253; " + th_rm.ex_genre.replace(';', ' &#128253; ') + "\n"
             if th_rm.ex_rating:
@@ -303,7 +302,8 @@ def film(event, again_movies_roll):
                 message += "&#128204; Время " + th_rm.ex_time_condition + " &#11088; " + str(
                     th_rm.ex_time) + " &#11088;\n"
             if th_rm.ex_year:
-                message += "&#128204; Год " + th_rm.ex_year_condition + " &#11088; " + str(th_rm.ex_year) + " &#11088;\n"
+                message += "&#128204; Год " + th_rm.ex_year_condition + " &#11088; " + str(
+                    th_rm.ex_year) + " &#11088;\n"
             message += "_______________________________\n"
         message += "&#10071; Поставь &#128172; [ + ] &#128172; в чат, если готов смотреть &#10071;"
         print('Создал новый класс')
@@ -318,8 +318,8 @@ def film(event, again_movies_roll):
                     session_api.messages.send(peer_id=chat_id,
                                               message='&#9888; &#9888; &#9888;\n&#128253; '
                                                       'В бесседе &#128173; ' + chat_title + ' &#128173; '
-                                                      'начался сбор фильмов, скорее ставь &#128172; [ + ] &#128172;'
-                                                      ', чтобы присоединится. &#128253;\n&#9888; &#9888; &#9888;',
+                                                                                            'начался сбор фильмов, скорее ставь &#128172; [ + ] &#128172;'
+                                                                                            ', чтобы присоединится. &#128253;\n&#9888; &#9888; &#9888;',
                                               random_id=get_random_id())
                 except:
                     print('Не смог отписать' + str(chat_id))
@@ -466,7 +466,7 @@ def chat_set(event):
                         value = value[value.find(' ') + 1:]
                         value = value[value.find(' ') + 1:]
                         save_to_db_set(event.chat_id, name, condition, value)
-                        message = "&#128204; Установлен параметр &#128253; " + name + " " + "фильма &#128253; "\
+                        message = "&#128204; Установлен параметр &#128253; " + name + " " + "фильма &#128253; " \
                                   + condition + " &#11088;" + value + " &#11088;"
 
                         session_api.messages.send(chat_id=event.chat_id,
@@ -487,17 +487,17 @@ def replace(event, only):
                 pass
         else:
             for i in range(len(only.movies)):
-                if only.movies[i].id == num:
+                if int(get_id(only.movies[i])) == num:
                     remove = only.movies.pop(i)
                     break
     except:
         num = event.obj.text[10:]
         for i in range(len(only.movies)):
-            if only.movies[i].title.lower() == num.lower():
+            if get_movie_name(only.movies[i].lower()) == num.lower():
                 remove = only.movies.pop(i)
                 break
     if remove:
-        message = 'Фильм &#128253; ' + remove.title + ' &#128253; был удален\n_____________________________\n'
+        message = 'Фильм &#128253; ' + get_movie_name(remove) + ' &#128253; был удален\n_____________________________\n'
         message += 'Текущий список фильмов :\n' + list_of_films(only.movies)
         message += '_____________________________\nЖду от тебя фильма на замену.'
     else:
@@ -605,19 +605,20 @@ def main(event):
         if event.from_chat:
             try:
                 if event.obj.action.get('type') == 'chat_invite_user':
-                    session_api.messages.send(chat_id=event.chat_id,
-                                              message='Привет, я kino-bot. &#9996;\n&#10071; Для того, чтобы '
-                                                      'начать - необходимо назначить меня администратором.\n'
-                                                      '&#128253;\nЯ помогу вам определится с выбором фильма.&#9762;\n'
-                                                      'Для этого напишите &#128172; [ !фильм ] &#128172; в чат '
-                                                      'и от тех, кто поставит &#128172; [ + ] &#128172; '
-                                                      'я жду 3 фильма. После этого, командой &#128172; [ !ролл ]'
-                                                      ' я выберу '
-                                                      'случайный фильм &#11088; , а оставшиеся я скину '
-                                                      'вам в лс, для дальнейшего использования.\n&#128253;\n'
-                                                      '&#128161; Весь список доступных команд вы можете узнать '
-                                                      'с помощью &#128172; [ !команды ] &#128172;',
-                                              random_id=get_random_id())
+                    if event.obj.action.get('member_id') < 0:
+                        session_api.messages.send(chat_id=event.chat_id,
+                                                  message='Привет, я kino-bot. &#9996;\n&#10071; Для того, чтобы '
+                                                          'начать - необходимо назначить меня администратором.\n'
+                                                          '&#128253;\nЯ помогу вам определится с выбором фильма.&#9762;\n'
+                                                          'Для этого напишите &#128172; [ !фильм ] &#128172; в чат '
+                                                          'и от тех, кто поставит &#128172; [ + ] &#128172; '
+                                                          'я жду 3 фильма. После этого, командой &#128172; [ !ролл ]'
+                                                          ' я выберу '
+                                                          'случайный фильм &#11088; , а оставшиеся я скину '
+                                                          'вам в лс, для дальнейшего использования.\n&#128253;\n'
+                                                          '&#128161; Весь список доступных команд вы можете узнать '
+                                                          'с помощью &#128172; [ !команды ] &#128172;',
+                                                  random_id=get_random_id())
                     return
             except:
                 pass
@@ -668,9 +669,6 @@ def main(event):
                 film(event, again_movies_roll)
                 return
 
-            elif event.obj.text.lower() == 'привет':
-                return
-
             elif event.obj.text.lower() == '+':
                 ready_to_film(event, again_movies_roll, again_plus, only)
                 return
@@ -691,7 +689,7 @@ def main(event):
                 chat_set(event)
                 return
 
-        if event.from_user:
+        elif event.from_user:
             only = None
             from_group = False
 
@@ -810,4 +808,6 @@ def run():
     while True:
         for event in long_poll.listen():
             threading.Thread(target=main, args=(event,), daemon=True).start()
+
+
 run()

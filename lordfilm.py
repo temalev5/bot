@@ -16,12 +16,15 @@ headers = {
 
 
 def search_url_movies(name):
-    data = {
-        'query': name,
-    }
+    try:
+        data = {
+            'query': name,
+        }
 
-    response = requests.post('http://lordsfilm.tv/engine/mod_punpun/dle_search/ajax/dle_search.php', headers=headers,
-                             data=data)
-    content = response.content.decode('utf-8')
-    content = content[content.find('http'):content.find('html') + 4]
-    return content
+        response = requests.post('http://lordsfilm.tv/engine/mod_punpun/dle_search/ajax/dle_search.php', headers=headers,
+                                 data=data)
+        content = response.content.decode('utf-8')
+        content = content[content.find('http'):content.find('html') + 4]
+        return content
+    except:
+        return ""
