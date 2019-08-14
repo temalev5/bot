@@ -109,16 +109,16 @@ def use_db(chat_id):
 def use_db_for_movies(user_id, chat_id):
     cursor = conn.cursor()
     if chat_id:
-        cursor.execute('SELECT users.movies FROM users WHERE chat_id=%s AND user_id=%s', (str(chat_id), str(user_id)))
+        cursor.execute('SELECT users.movies,kp_id FROM users WHERE chat_id=%s AND user_id=%s', (str(chat_id), str(user_id)))
     else:
-        cursor.execute('SELECT users.movies,users.chat_id FROM users WHERE user_id=%s', (str(user_id),))
+        cursor.execute('SELECT users.chat_id, users.movies FROM users WHERE user_id=%s', (str(user_id),))
     result = cursor.fetchall()
     return result
 
 
 def notify_db(chat_id, notify):
     cursor = conn.cursor()
-    cursor.execute('SELECT notify FROM chats WHERE chat_id=%s', (str(chat_id)))
+    cursor.execute('SELECT notify FROM chats WHERE chat_id=%s', (str(chat_id),))
     result = cursor.fetchall()
     if result:
         cursor.execute("UPDATE chats SET notify = %s WHERE chat_id=%s",
@@ -126,4 +126,14 @@ def notify_db(chat_id, notify):
     else:
         cursor.execute('INSERT INTO chats(chat_id,notify) VALUES(%s,%s)',
                        (str(chat_id), str(notify)))
+    conn.commit()
+
+
+def save_kp_id(user_id, kp_id):
+    cursor = conn.cursor()
+    cursor.execute('SELECT movies FROM users WHERE user_id=%s', (str(138165450),))
+    result = cursor.fetchall()
+    if result:
+        cursor.execute("UPDATE users SET kp_id = %s WHERE user_id=%s",
+                       (str(kp_id), str(user_id)))
     conn.commit()

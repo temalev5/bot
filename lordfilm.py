@@ -22,7 +22,7 @@ def search_url_movies(name):
         }
 
         response = requests.post('http://lordsfilms.tv/engine/mod_punpun/dle_search/ajax/dle_search.php', headers=headers,
-                                 data=data)
+                                 data=data, timeout=3)
         content = response.content.decode('utf-8')
         content = content[content.find('http'):content.find('html') + 4]
         return content
