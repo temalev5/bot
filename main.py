@@ -346,7 +346,11 @@ def film(event, again_movies_roll):
                 message += "&#128204; Год " + th_rm.ex_year_condition + " &#11088; " + str(
                     th_rm.ex_year) + " &#11088;\n"
             message += "_______________________________\n"
-        message += "&#10071; Поставь &#128172; [ + ] &#128172; в чат, если готов смотреть &#10071;"
+        message += "&#10071; Поставь &#128172; [ + ] &#128172; в чат, если готов смотреть &#10071;\n"
+        message += "_______________________________\n"
+        message += "&#10071; Перед тем как поставить &#128172; [ + ] &#128172; напиши мне в лс свой ID на кинопоиске " \
+                   "&#128172; [ !кп <ID> ] &#128172; для того, чтобы я мог отсекать фильмы, " \
+                   "которые ты уже когда-либо смотрел &#10071;"
         print('Создал новый класс')
         session_api.messages.send(chat_id=event.chat_id, message=message, random_id=get_random_id())
         if th_rm.notify:
@@ -817,7 +821,15 @@ def main(event):
             if not from_group:
                 only, from_replace = search_man_for_replace(event.obj.from_id)
 
-            if from_group or from_replace:
+            if event.obj.text.lower()[0:3] == '!kp' or \
+                    event.obj.text.lower()[0:3] == '!кп':
+                kp_id = int(event.obj.text[event.obj.text.find(" ") + 1:])
+                save_kp_id(event.obj.from_id, kp_id)
+                session_api.messages.send(peer_id=event.obj.from_id,
+                                          message='&#10071; &#9762; ID: ' + str(kp_id) + " &#9762; прикреплен!   &#10071;",
+                                          random_id=get_random_id())
+
+            elif from_group or from_replace:
 
                 keyboard = VkKeyboard(one_time=True)
                 keyboard.add_button('+', color=VkKeyboardColor.POSITIVE)
@@ -872,13 +884,6 @@ def main(event):
                                                       'я напишу тебе информацию о нем. &#128253;',
                                               random_id=get_random_id())
                     return
-                elif event.obj.text.lower()[0:3] == '!kp' or \
-                        event.obj.text.lower()[0:3] == '!кп':
-                    kp_id = int(event.obj.text[event.obj.text.find(" ") + 1:])
-                    save_kp_id(event.obj.from_id, kp_id)
-                    session_api.messages.send(peer_id=event.obj.from_id,
-                                              message='Прикреплен kp_id ' + str(kp_id),
-                                              random_id=get_random_id())
                 elif event.obj.text.lower()[0:9] == '!заменить':
                     # replace_in_db(event)
                     return
