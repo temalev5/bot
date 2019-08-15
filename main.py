@@ -848,6 +848,13 @@ def main(event):
                     text = text.replace(" " + year, '')
                     min_year = year[:year.find("-")]
                     max_year = year[year.find("-") + 1:]
+                try:
+                    year = int(year)
+                    text = text.replace(" " + str(year), '')
+                    min_year = year
+                    max_year = year
+                except:
+                    pass
                 if text:
                     params = text.split(" ")
                 movie_id = get_random_movie(params, min_year, max_year)
