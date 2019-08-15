@@ -109,7 +109,8 @@ def use_db(chat_id):
 def use_db_for_movies(user_id, chat_id):
     cursor = conn.cursor()
     if chat_id:
-        cursor.execute('SELECT users.movies,kp_id FROM users WHERE chat_id=%s AND user_id=%s', (str(chat_id), str(user_id)))
+        cursor.execute('SELECT users.movies,kp_id FROM users WHERE chat_id=%s AND user_id=%s', (str(chat_id),
+                                                                                                str(user_id)))
     else:
         cursor.execute('SELECT users.chat_id, users.movies FROM users WHERE user_id=%s', (str(user_id),))
     result = cursor.fetchall()
@@ -131,7 +132,7 @@ def notify_db(chat_id, notify):
 
 def save_kp_id(user_id, kp_id):
     cursor = conn.cursor()
-    cursor.execute('SELECT movies FROM users WHERE user_id=%s', (str(138165450),))
+    cursor.execute('SELECT movies FROM users WHERE user_id=%s', (str(user_id),))
     result = cursor.fetchall()
     if result:
         cursor.execute("UPDATE users SET kp_id = %s WHERE user_id=%s",

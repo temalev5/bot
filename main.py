@@ -7,7 +7,7 @@ from vk_api.bot_longpoll import VkBotLongPoll, VkBotEventType
 from vk_api.keyboard import VkKeyboard, VkKeyboardColor
 from db import use_db, use_db_for_movies, save_to_db, save_to_db_set, notify_db, save_movies_to_db, save_kp_id
 from vk_api.utils import get_random_id
-from parse_kp import get_all_viewed_movies
+from parse_kp import get_all_viewed_movies, get_random_movie
 from sm import name_to_id, movie_to_text, get_name_by_id, rating_emoji
 import traceback
 import os
@@ -55,9 +55,8 @@ def list_of_films(movies):
     message = ''
     for i in range(len(movies)):
         message += str(i + 1) + '&#8419; '
-        message += movies[i][:movies[i].find(')') + 1] + ' ' \
-                   + movies[i][movies[i].find('[') + 1:movies[i].find(']')] \
-                   + ';' + '\n'
+        message += movies[i][:movies[i].find(')') + 1] + ' ' + \
+            movies[i][movies[i].find('[') + 1:movies[i].find(']')] + ';' + '\n'
     return message
 
 
@@ -398,7 +397,8 @@ def ready_to_film(event, again_movies_roll, again_plus, only):
                     if len(movies) < 3:
                         message += '_____________________________\nЖду еще ' + str((3 - len(movies))) + ' &#128253;'
                     else:
-                        message += '_____________________________\n&#9745; Принял от тебя все 3 фильма. &#9745;\n&#128253;&#128253;&#128253;\n' \
+                        message += '_____________________________\n&#9745; Принял от тебя все 3 фильма.' \
+                                   ' &#9745;\n&#128253;&#128253;&#128253;\n' \
                                    '&#10071; Тебе доступны команды &#10071;\n&#128172; [ !заменить ' \
                                    '<(название,ID,номер фильма> ] &#128172;\n' \
                                    '&#128172; [ !список ] &#128172;'
@@ -584,7 +584,6 @@ def replace_in_db(event):
 
                 except:
                     pass
-                a = 10
         else:
             message = 'Список фильмов:\n'
             for i in range(len(movies)):
@@ -628,6 +627,11 @@ def chat_list(event, only):
 
 
 def reject_movie(event, only, keyboard):
+    if only.searchMovie == "RANDOM":
+        only.countFindFilm = 0
+        only.searchMovie = None
+        only.targetMovie = None
+        return
     beh_movie = only.searchMovie
     only.countFindFilm += 1
     movie, message = name_to_id(beh_movie, only.countFindFilm)
@@ -826,9 +830,75 @@ def main(event):
                 kp_id = int(event.obj.text[event.obj.text.find(" ") + 1:])
                 save_kp_id(event.obj.from_id, kp_id)
                 session_api.messages.send(peer_id=event.obj.from_id,
-                                          message='&#10071; &#9762; ID: ' + str(kp_id) + " &#9762; прикреплен!   &#10071;",
+                                          message='&#10071; &#9762; ID: ' + str(kp_id) +
+                                                  " &#9762; прикреплен!   &#10071;",
                                           random_id=get_random_id())
 
+            elif event.obj.text.lower()[0:7] == "!рандом" or \
+                    event.obj.text.lower()[0:8] == "!случайн":
+                keyboard = None
+                text = ''
+                if event.obj.text.find(' ') > -1:
+                    text = event.obj.text[event.obj.text.find(' ') + 1:].lower()
+                year = text[text.rfind(" ") + 1:]
+                min_year = 1920
+                max_year = 2019
+                params = ""
+                if year.find("-") > -1:
+                    text = text.replace(" " + year, '')
+                    min_year = year[:year.find("-")]
+                    max_year = year[year.find("-") + 1:]
+                if text:
+                    params = text.split(" ")
+                movie_id = get_random_movie(params, min_year, max_year)
+                movie = get_name_by_id(movie_id)
+                message = movie_to_text(movie)
+                if only:
+                    if len(only.movies) < 3:
+                        message += "&#10071; Добавить его в список ваших фильмов? &#10071;"
+                        only.targetMovie = movie
+                        only.searchMovie = "RANDOM"
+                        keyboard = VkKeyboard(one_time=True)
+                        keyboard.add_button('+', color=VkKeyboardColor.POSITIVE)
+                        keyboard.add_button('-', color=VkKeyboardColor.NEGATIVE)
+                        keyboard = keyboard.get_keyboard()
+                else:
+                    message += '\n&#9889;' + search_url_movies(movie.title) + ' &#9889;'
+                session_api.messages.send(peer_id=event.obj.from_id,
+                                          message=message,
+                                          random_id=get_random_id(),
+                                          keyboard=keyboard)
+                return
+
+            elif event.obj.text.lower()[0:8] == "!команды":
+                session_api.messages.send(peer_id=event.obj.from_id,
+                                          message='Список команд:\n&#128172;&#128172;&#128172;\n'
+                                                  '____________________________________________________________'
+                                                  '___\n'
+                                                  '&#128172; [ !kp <ID кинопоиска> ] || [ !кп <ID кинопоиска> ] - позволяет'
+                                                  ' получить доступ к списку просмотренных фильмов\n'
+                                                  '&#128172; [ !рандом* <([Жанры]||[Страны])> <Годы> ] || ['
+                                                  ' !сучайн* <([Жанры]||[Страны])> <Годы> ] - ищет случайный фильм по'
+                                                  ' заданным параметрам '
+                                                  '&#128310; [ !случайный ужастик 2018-2019 ] &#128310;\n'
+                                                  '&#128172; [ <название фильма> ] - ищет информацию о фильме '
+                                                  'на кинопоиске, и скидывает ее в ответ\n'
+                                                  '&#128172; [ !команды ] - скидывает список доступных команд\n'
+                                                  '&#128172; &#128253; [ !заменить <(название,ID,номер фильма> ] - '
+                                                  'позволяет поменять фильм &#128172;\n'
+                                                  '&#128172; &#128253; [ !список ] - скидывает текущий список фильмов\n'
+                                                  '&#128172; &#128253; [ + ] - подтверждает правильность найденого '
+                                                  'фильма и записывает его в список для ролла\n'
+                                                  '&#128172; &#128253; [ - ] - сообщает о том, что фильм найден '
+                                                  'неверно. Бот скидывает новый фильм\n'
+                                                  '&#128172; &#128253; [ <название фильма> ] - ищет информацию о фильме'
+                                                  ' на кинопоиске, и скидывает ее в ответ, ожидая &#128172; '
+                                                  '[ + || - ] &#128172;\n'
+                                                  '&#10071; Команды со значком &#128253; доступны только '
+                                                  'после запуска сбора фильмов &#128172; [ !фильм ] &#128172; в чат\n'
+                                                  '_______________________________________________________________',
+                                          random_id=get_random_id())
+                return
             elif from_group or from_replace:
 
                 keyboard = VkKeyboard(one_time=True)
