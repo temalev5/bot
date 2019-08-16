@@ -56,7 +56,7 @@ def list_of_films(movies):
     for i in range(len(movies)):
         message += str(i + 1) + '&#8419; '
         message += movies[i][:movies[i].find(')') + 1] + ' ' + \
-            movies[i][movies[i].find('[') + 1:movies[i].find(']')] + ';' + '\n'
+                   movies[i][movies[i].find('[') + 1:movies[i].find(']')] + ';' + '\n'
     return message
 
 
@@ -193,6 +193,63 @@ def check_already_use(man_id, chat_id):
 # session_api.messages.setActivity(peer_id=user_id,type = 'typing')
 # time.sleep(5)
 
+class Vote:
+    def __init__(self, chat_id, man_id, total):
+        self.start_time = time.clock()
+        self.chat_id = chat_id
+        self.man_id = man_id
+        self.for_ = []
+        self.against = []
+        self.total = total
+
+    def __check_already_in_list(self, man_id):
+        if self.for_.count(man_id) == 0 and self.against.count(man_id) == 0:
+            return True
+        else:
+            return False
+
+    def for__(self, man_id):
+        if self.__check_already_in_list(man_id):
+            self.for_.append(man_id)
+            return self.end_vote()
+
+    def against__(self, man_id):
+        if self.__check_already_in_list(man_id):
+            self.against.append(man_id)
+            return self.end_vote()
+
+    def set_man_movie(self, bool):
+        only = search_chat(self.chat_id)[0]
+        for i in range(len(only.man)):
+            if only.man[i].man_id == self.man_id:
+                if bool:
+                    only.man[i].set_movies()
+                    chat_list(self.man_id, only.man[i])
+                only.man[i].searchMovie = None
+                only.man[i].targetMovie = None
+
+    def end_vote(self):
+        message = "Статус голосования:\n___________________\nПроголосовавших: [" + \
+                  str(len(self.for_) + len(self.against)) + "/" + str(self.total) + "] &#9889;\n&#10004; " + \
+                  str(len(self.for_)) + " &#10060; " + str(len(self.against)) + \
+                  "\n___________________\n"
+        if len(self.against) > 1:
+            self.set_man_movie(False)
+            message += "Голосование окончено. [ Фильм не был добавлен ]"
+            return message
+        if len(self.for_) + len(self.against) == self.total:  ###########!~~!@!@!!@~@~
+            self.set_man_movie(True)
+            message += "Голосование окончено. [ Фильм был добавлен ]"
+            return message
+        seconds = 120 - int(time.clock()-self.start_time)
+        if seconds > 59:
+            minutes = int(seconds/60)
+            seconds = seconds - (minutes*60)
+            message += "&#9202; " + str(minutes) + ":" + str(seconds) + " до окончания"
+        else:
+            message += "&#9202; " + str(seconds) + " до окончания"
+        return message
+
 
 class Man:
 
@@ -223,6 +280,7 @@ class ChatRoll:
     def __init__(self, chat_id):
         self.chat_id = chat_id
         self.man = []
+        self.vote = None
         self.ex_rating = None
         self.ex_rating_condition = ">"
         self.ex_genre = None
@@ -251,6 +309,22 @@ class ChatRoll:
             self.ex_country = result[0][8]
             if result[0][9] is not None:
                 self.notify = result[0][9]
+
+    def _vote_timer(self):
+        time.sleep(120)
+        if self.vote:
+            message = self.vote.end_vote()
+            if message.find("Голосование окончено.") == -1:
+                self.vote.set_man_movie(True)
+                message += "Голосование окончено. [ Фильм был добавлен [ timeout ] ]"
+            self.vote = None
+            session_api.messages.send(chat_id=self.chat_id,
+                                      message=message,
+                                      random_id=get_random_id())
+
+    def _vote(self, chat_id, man_id, total):
+        self.vote = Vote(chat_id, man_id, total)
+        threading.Thread(target=self._vote_timer, daemon=True).start()
 
     def new_man(self, chat_id, man_id):
         self.man.append(Man(chat_id, man_id))
@@ -371,13 +445,21 @@ def film(event, again_movies_roll):
 
 def ready_to_film(event, again_movies_roll, again_plus, only):
     if again_plus:
-        username = get_username(event.obj.from_id)
+        if only.vote:
+            message = only.vote.for__(event.obj.from_id)
+            if message.find("Голосование окончено.") != -1:
+                only.vote = None
+            session_api.messages.send(chat_id=event.chat_id, message=message,
+                                      random_id=get_random_id())
+            return
+        else:
+            username = get_username(event.obj.from_id)
 
-        message = '&#10071; @id' + str(event.obj.from_id) + ' (' + username + '), уже отписал тебе в лс &#10071;'
+            message = '&#10071; @id' + str(event.obj.from_id) + ' (' + username + '), уже отписал тебе в лс &#10071;'
 
-        session_api.messages.send(chat_id=event.chat_id, message=message,
-                                  random_id=get_random_id())
-        return
+            session_api.messages.send(chat_id=event.chat_id, message=message,
+                                      random_id=get_random_id())
+            return
     else:
         if again_movies_roll:
 
@@ -618,16 +700,16 @@ def replace_in_db(event):
                               random_id=get_random_id())
 
 
-def chat_list(event, only):
+def chat_list(man_id, only):
     movies = only.movies
     message = 'Текущий список фильмов :\n' + list_of_films(movies)
-    session_api.messages.send(peer_id=event.obj.from_id,
+    session_api.messages.send(peer_id=man_id,
                               message=message,
                               random_id=get_random_id())
 
 
 def reject_movie(event, only, keyboard):
-    if only.searchMovie == "RANDOM":
+    if only.searchMovie == "__RANDOM" or only.searchMovie == "__VOTE":
         only.countFindFilm = 0
         only.searchMovie = None
         only.targetMovie = None
@@ -655,6 +737,27 @@ def reject_movie(event, only, keyboard):
                               random_id=get_random_id(), keyboard=keyboard)
 
 
+def start_vote(only):
+    sec_only = search_chat(only.chat_id)[0]
+    if len(sec_only.man) > 2:
+        sec_only._vote(sec_only.chat_id, only.man_id, len(sec_only.man))
+        only.searchMovie = "__VOTE_START"
+        message = "&#10071; " + get_username(only.man_id) + ", запустил голосование для добавления " \
+                  "нелегитимного фильма &#10071; &#9202; 2мин\n_______________________________________________________________\n"\
+                  + movie_to_text(only.targetMovie) + "&#10071;" \
+                  " Ставь &#128172; [ + ] или [ - ] &#128172; &#10071;"
+        session_api.messages.send(chat_id=sec_only.chat_id,
+                                  message=message,
+                                  random_id=get_random_id())
+    else:
+        only.searchMovie = None
+        only.targetMovie = None
+        message = "&#10071; Для запуска голосования, необходимо 3 или более учасников &#10071;"
+        session_api.messages.send(peer_id=only.man_id,
+                                  message=message,
+                                  random_id=get_random_id())
+
+
 def accept_movie(event, only, from_replace):
     only.countFindFilm = 0
 
@@ -667,12 +770,19 @@ def accept_movie(event, only, from_replace):
     legitimacy = check_legitimacy(only.targetMovie, sec_only)
 
     if legitimacy:
-        message = "&#10071; Этот фильм нелегитимен! &#10071;\n&#10071; Причина: " + legitimacy + ' &#10071;'
+        message = "&#10071; Этот фильм нелегитимен! &#10071;\n&#10071; Причина: " + legitimacy + ' &#10071;\n'
+        if legitimacy.find(" уже смотрел этот фильм!") == -1 and \
+                legitimacy.find("Этот фильм уже кто-то заказал!") == -1:
+            message += "_____________________________\n&#10071; Запустить голосование для принудительного " \
+                       "добавления нелегитимного фильма? &#10071;"
+            only.searchMovie = "__VOTE"
+            # only.targetMovie = None
+        else:
+            only.searchMovie = None
+            only.targetMovie = None
         session_api.messages.send(peer_id=event.obj.from_id,
                                   message=message,
                                   random_id=get_random_id())
-        only.searchMovie = None
-        only.targetMovie = None
         return
 
     only.set_movies()
@@ -787,7 +897,7 @@ def main(event):
             only, again_movies_roll = search_chat(event.chat_id)
 
             try:
-                man = only.getMan()
+                man = only.man
                 for j in range(len(only.man)):
                     if man[j].man_id == event.obj.from_id:
                         again_plus = True
@@ -800,6 +910,15 @@ def main(event):
 
             elif event.obj.text.lower() == '+':
                 ready_to_film(event, again_movies_roll, again_plus, only)
+                return
+
+            elif event.obj.text.lower() == '-':
+                if only.vote:
+                    message = only.vote.against__(event.obj.from_id)
+                    if message.find("Голосование окончено.") != -1:
+                        only.vote = None
+                    session_api.messages.send(chat_id=event.chat_id, message=message,
+                                              random_id=get_random_id())
                 return
 
             elif event.obj.text.lower() == '!ролл':
@@ -833,48 +952,6 @@ def main(event):
                                           message='&#10071; &#9762; ID: ' + str(kp_id) +
                                                   " &#9762; прикреплен!   &#10071;",
                                           random_id=get_random_id())
-
-            elif event.obj.text.lower()[0:7] == "!рандом" or \
-                    event.obj.text.lower()[0:8] == "!случайн":
-                keyboard = None
-                text = ''
-                if event.obj.text.find(' ') > -1:
-                    text = event.obj.text[event.obj.text.find(' ') + 1:].lower()
-                year = text[text.rfind(" ") + 1:]
-                min_year = 1920
-                max_year = 2019
-                params = ""
-                if year.find("-") > -1:
-                    text = text.replace(" " + year, '')
-                    min_year = year[:year.find("-")]
-                    max_year = year[year.find("-") + 1:]
-                try:
-                    year = int(year)
-                    text = text.replace(" " + str(year), '')
-                    min_year = year
-                    max_year = year
-                except:
-                    pass
-                if text:
-                    params = text.split(" ")
-                movie_id = get_random_movie(params, min_year, max_year)
-                movie = get_name_by_id(movie_id)
-                message = movie_to_text(movie)
-                if only:
-                    if len(only.movies) < 3:
-                        message += "&#10071; Добавить его в список ваших фильмов? &#10071;"
-                        only.targetMovie = movie
-                        only.searchMovie = "RANDOM"
-                        keyboard = VkKeyboard(one_time=True)
-                        keyboard.add_button('+', color=VkKeyboardColor.POSITIVE)
-                        keyboard.add_button('-', color=VkKeyboardColor.NEGATIVE)
-                        keyboard = keyboard.get_keyboard()
-                else:
-                    message += '\n&#9889;' + search_url_movies(movie.title) + ' &#9889;'
-                session_api.messages.send(peer_id=event.obj.from_id,
-                                          message=message,
-                                          random_id=get_random_id(),
-                                          keyboard=keyboard)
                 return
 
             elif event.obj.text.lower()[0:8] == "!команды":
@@ -906,6 +983,55 @@ def main(event):
                                                   '_______________________________________________________________',
                                           random_id=get_random_id())
                 return
+
+            elif event.obj.text.lower()[0:7] == "!рандом" or \
+                    event.obj.text.lower()[0:8] == "!случайн":
+                if only.searchMovie == "__VOTE_START":
+                    session_api.messages.send(peer_id=event.obj.from_id,
+                                              message="&#10071; Ожидай оконачния голосования &#10071;",
+                                              random_id=get_random_id())
+                    return
+                keyboard = None
+                text = ''
+                if event.obj.text.find(' ') > -1:
+                    text = event.obj.text[event.obj.text.find(' ') + 1:].lower()
+                year = text[text.rfind(" ") + 1:]
+                min_year = 1920
+                max_year = 2019
+                params = ""
+                if year.find("-") > -1:
+                    text = text.replace(" " + year, '')
+                    min_year = year[:year.find("-")]
+                    max_year = year[year.find("-") + 1:]
+                try:
+                    year = int(year)
+                    text = text.replace(" " + str(year), '')
+                    min_year = year
+                    max_year = year
+                except:
+                    pass
+                if text:
+                    params = text.split(" ")
+                movie_id = get_random_movie(params, min_year, max_year)
+                movie = get_name_by_id(movie_id)
+                message = movie_to_text(movie)
+                if only:
+                    if len(only.movies) < 3:
+                        message += "&#10071; Добавить его в список ваших фильмов? &#10071;"
+                        only.targetMovie = movie
+                        only.searchMovie = "__RANDOM"
+                        keyboard = VkKeyboard(one_time=True)
+                        keyboard.add_button('+', color=VkKeyboardColor.POSITIVE)
+                        keyboard.add_button('-', color=VkKeyboardColor.NEGATIVE)
+                        keyboard = keyboard.get_keyboard()
+                else:
+                    message += '\n&#9889;' + search_url_movies(movie.title) + ' &#9889;'
+                session_api.messages.send(peer_id=event.obj.from_id,
+                                          message=message,
+                                          random_id=get_random_id(),
+                                          keyboard=keyboard)
+                return
+
             elif from_group or from_replace:
 
                 keyboard = VkKeyboard(one_time=True)
@@ -929,7 +1055,13 @@ def main(event):
                 #                               random_id=get_random_id())
 
                 elif event.obj.text.lower() == "!список":
-                    chat_list(event, only)
+                    chat_list(event.obj.from_id, only)
+                    return
+
+                if only.searchMovie == "__VOTE_START":
+                    session_api.messages.send(peer_id=event.obj.from_id,
+                                              message="&#10071; Ожидай оконачния голосования &#10071;",
+                                              random_id=get_random_id())
                     return
 
                 if len(only.movies) < 3:
@@ -939,7 +1071,10 @@ def main(event):
                         return
 
                     elif event.obj.text == '+' and only.searchMovie:
-                        accept_movie(event, only, from_replace)
+                        if only.searchMovie == "__VOTE":
+                            start_vote(only)
+                        else:
+                            accept_movie(event, only, from_replace)
                         return
 
                     else:
